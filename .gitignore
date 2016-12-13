@@ -1,0 +1,8 @@
+.DS_Store
+.env
+.flowconfig
+.vscode
+build
+coverage
+node_modules
+npm-debug.log
