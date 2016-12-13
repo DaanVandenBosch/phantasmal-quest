@@ -2,6 +2,7 @@
   "name": "phantasmal-quest",
   "version": "0.1.0-SNAPSHOT",
   "private": true,
+  "homepage": "https://www.daanvandenbosch.com/pso/phantasmal-quest",
   "devDependencies": {
     "react-scripts": "0.8.3",
     "redux-devtools": "^3.3.1"
