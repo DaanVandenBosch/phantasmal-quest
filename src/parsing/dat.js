@@ -3,7 +3,7 @@ import { List } from 'immutable';
 import ArrayBufferCursor from './ArrayBufferCursor';
 
 export function parse_dat(cursor: ArrayBufferCursor) {
-    const monsters = [];
+    const npcs = [];
     let offset = 0;
 
     while (offset < cursor.size) {
@@ -14,10 +14,10 @@ export function parse_dat(cursor: ArrayBufferCursor) {
         const size = cursor.u32();
 
         if (entity_type === 2) {
-            const monster_count = Math.floor(size / 72);
+            const npc_count = Math.floor(size / 72);
             const start_position = cursor.position;
 
-            for (let i = 0; i < monster_count; ++i) {
+            for (let i = 0; i < npc_count; ++i) {
                 const type = cursor.u32();
                 cursor.seek(2);
                 const clone_count = cursor.u16();
@@ -34,7 +34,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                 const skin = cursor.u32();
                 const rt_index = cursor.u32(); // ?
 
-                monsters.push({
+                npcs.push({
                     type,
                     clone_count,
                     section_id,
@@ -59,5 +59,5 @@ export function parse_dat(cursor: ArrayBufferCursor) {
         offset += next_header;
     }
 
-    return { monsters: List(monsters) };
+    return { npcs: List(npcs) };
 }

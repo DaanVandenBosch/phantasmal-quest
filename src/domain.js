@@ -8,6 +8,7 @@ export const NPC = Record({
 export const Quest = Record({
     name: null,
     short_description: null,
+    long_description: null,
     area_ids: OrderedSet(),
     npcs: List()
 });

@@ -93,13 +93,13 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
     const normal_lists_list = [];
 
     const main_block_offset = dv.getUint32(dv.byteLength - 16, true);
-    const area_count = dv.getUint32(main_block_offset + 8, true);
+    const section_count = dv.getUint32(main_block_offset + 8, true);
     const section_table_offset = dv.getUint32(main_block_offset + 16, true);
     // const texture_name_offset = dv.getUint32(main_block_offset + 20, true);
 
     for (
         let i = section_table_offset;
-        i < section_table_offset + area_count * 52;
+        i < section_table_offset + section_count * 52;
         i += 52
     ) {
         const section_id = dv.getUint32(i, true);
@@ -128,13 +128,13 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
                 offset = dv.getUint32(offset, true);
             }
 
-            const block_offset = dv.getUint32(offset + 4, true);
+            const geometry_offset = dv.getUint32(offset + 4, true);
 
-            if (block_offset > 0) {
-                const vertex_info_table_offset = dv.getUint32(block_offset + 4, true);
+            if (geometry_offset > 0) {
+                const vertex_info_table_offset = dv.getUint32(geometry_offset + 4, true);
                 // const vertex_info_count = dv.getUint32(block_offset + 8, true);
-                const object_table_offset = dv.getUint32(block_offset + 12, true);
-                const object_count = dv.getUint32(block_offset + 16, true);
+                const triangle_strip_table_offset = dv.getUint32(geometry_offset + 12, true);
+                const triangle_strip_count = dv.getUint32(geometry_offset + 16, true);
                 // const transparent_object_table_offset = dv.getUint32(block_offset + 20, true);
                 // const transparent_object_count = dv.getUint32(block_offset + 24, true);
 
@@ -143,26 +143,26 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
                 const geom_index_lists = [];
 
                 for (
-                    let k = object_table_offset;
-                    k < object_table_offset + object_count * 20;
+                    let k = triangle_strip_table_offset;
+                    k < triangle_strip_table_offset + triangle_strip_count * 20;
                     k += 20
                 ) {
                     // const flag_and_texture_id_offset = dv.getUint32(k, true);
                     // const data_type = dv.getUint32(k + 4, true);
-                    const index_table_offset = dv.getUint32(k + 8, true);
-                    const index_count = dv.getUint32(k + 12, true);
+                    const triangle_strip_index_table_offset = dv.getUint32(k + 8, true);
+                    const triangle_strip_index_count = dv.getUint32(k + 12, true);
 
-                    const object_indices = [];
+                    const triangle_strip_indices = [];
 
                     for (
-                        let l = index_table_offset;
-                        l < index_table_offset + index_count * 2;
+                        let l = triangle_strip_index_table_offset;
+                        l < triangle_strip_index_table_offset + triangle_strip_index_count * 2;
                         l += 2
                     ) {
-                        object_indices.push(dv.getUint16(l, true));
+                        triangle_strip_indices.push(dv.getUint16(l, true));
                     }
 
-                    geom_index_lists.push(object_indices);
+                    geom_index_lists.push(triangle_strip_indices);
 
                     // TODO: Read texture info.
                 }
