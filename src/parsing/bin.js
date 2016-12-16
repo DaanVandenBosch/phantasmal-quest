@@ -5,7 +5,6 @@ export function parse_bin(cursor: ArrayBufferCursor) {
     const script_offset = cursor.u32();
     const function_offset_table_offset = cursor.u32(); // Relative offsets
     const unknown_offset = cursor.u32();
-    console.log(script_offset, function_offset_table_offset, unknown_offset)
     cursor.seek(12);
     const quest_name = cursor.string_utf_16(64, true, true);
     const short_description = cursor.string_utf_16(256, true, true);
