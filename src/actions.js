@@ -1,5 +1,5 @@
 // @flow
-import ArrayBufferCursor from './parsing/ArrayBufferCursor';
+import { ArrayBufferCursor } from './parsing/ArrayBufferCursor';
 import { parse_quest } from './parsing/quest';
 import { get_area_sections } from './area-data';
 

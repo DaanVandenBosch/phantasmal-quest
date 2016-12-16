@@ -1,6 +1,6 @@
 // @flow
 import { List } from 'immutable';
-import ArrayBufferCursor from './ArrayBufferCursor';
+import { ArrayBufferCursor } from './ArrayBufferCursor';
 
 export function parse_dat(cursor: ArrayBufferCursor) {
     const npcs = [];

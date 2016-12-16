@@ -1,9 +1,9 @@
 // @flow
 import React from 'react';
 import { connect } from 'react-redux';
-import QuestRenderer from '../rendering/QuestRenderer';
+import { QuestRenderer } from '../rendering/QuestRenderer';
 
-class Area3DComponent extends React.Component {
+class Area3DComponentRaw extends React.Component {
     _renderer = new QuestRenderer();
 
     render() {
@@ -25,9 +25,9 @@ class Area3DComponent extends React.Component {
     }
 }
 
-export default connect(
+export const Area3DComponent = connect(
     state => ({
         quest: state.get('current_quest'),
         area: state.get('areas').get(state.get('current_area_id'))
     })
-)(Area3DComponent);
+)(Area3DComponentRaw);

@@ -11,14 +11,16 @@ const description_style = {
     padding: '10px 0'
 };
 
-function QuestInfoComponent({quest}) {
+function QuestInfoComponentRaw({quest}) {
     if (quest) {
+        const episode = quest.episode === 4 ? 'IV' : (quest.episode == 2 ? 'II' : 'I');
         return (
             <table style={style}>
                 <tbody>
-                    <tr><th>{quest.name}</th></tr>
-                    <tr><td style={description_style}>{quest.short_description}</td></tr>
-                    <tr><td style={description_style}>{quest.long_description}</td></tr>
+                    <tr><th colSpan="2">{quest.name}</th></tr>
+                    <tr><td colSpan="2" style={description_style}>{quest.short_description}</td></tr>
+                    <tr><td colSpan="2" style={description_style}>{quest.long_description}</td></tr>
+                    <tr><td>Episode:</td><td>{episode}</td></tr>
                 </tbody>
             </table>
         );
@@ -27,6 +29,6 @@ function QuestInfoComponent({quest}) {
     }
 }
 
-export default connect(
+export const QuestInfoComponent = connect(
     state => ({ quest: state.get('current_quest') })
-)(QuestInfoComponent);
+)(QuestInfoComponentRaw);

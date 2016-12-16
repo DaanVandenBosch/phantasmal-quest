@@ -1,5 +1,5 @@
 // @flow
-import ArrayBufferCursor from './ArrayBufferCursor';
+import { ArrayBufferCursor } from './ArrayBufferCursor';
 
 class Context {
     src: ArrayBufferCursor;

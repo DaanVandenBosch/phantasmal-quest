@@ -12,7 +12,7 @@ const OrbitControls = OrbitControlsCreator(THREE);
 /**
  * Renders one quest area at a time.
  */
-export default class QuestRenderer {
+export class QuestRenderer {
     _renderer = new WebGLRenderer({ antialias: true, alpha: true });
     _camera: PerspectiveCamera;
     _controls: OrbitControls;

@@ -3,15 +3,41 @@ const ASCII_DECODER = new TextDecoder('ascii');
 const UTF_16BE_DECODER = new TextDecoder('utf-16be');
 const UTF_16LE_DECODER = new TextDecoder('utf-16le');
 
-export default class ArrayBufferCursor {
+/**
+ * A cursor for reading and writing binary data. Uses an ArrayBuffer internally.
+ */
+export class ArrayBufferCursor {
+    //
+    // Public properties
+    //
+
+    /**
+     * The cursor's size. This value will always be equal to or smaller than the cursor's capacity.
+     */
     size: number;
+
+    /**
+     * The position from where bytes will be read or written.
+     */
     position: number;
+
+    /**
+     * Byte order mode.
+     */
     little_endian: boolean;
+
+    //
+    // Private properties
+    //
 
     _buffer: ArrayBuffer;
     _dv: DataView;
     _utf_16_decoder: TextDecoder;
 
+    /**
+     * @param buffer_or_capacity - If an ArrayBuffer is given, writes to the cursor will be reflected in this array buffer and vice versa until a cursor write that requires allocating a new internal buffer happens
+     * @param little_endian - Decides in which byte order multi-byte integers and floats will be interpreted
+     */
     constructor(buffer_or_capacity: ArrayBuffer | number, little_endian: boolean) {
         if (typeof buffer_or_capacity === 'number') {
             this._buffer = new ArrayBuffer(buffer_or_capacity);
@@ -27,10 +53,28 @@ export default class ArrayBufferCursor {
         this._utf_16_decoder = little_endian ? UTF_16LE_DECODER : UTF_16BE_DECODER;
     }
 
+    //
+    // Public methods
+    //
+
+    /**
+     * The amount of bytes left to read from the current position onward.
+     */
+    get bytes_left(): number {
+        return this.size - this.position;
+    }
+
+    /**
+     * The size of the underlying buffer. This value will always be equal to or greater than the cursor's size.
+     */
     get capacity(): number {
         return this._buffer.byteLength;
     }
 
+    /**
+     * Returns a view of the underlying buffer. It is recommended to only use this buffer after you are done writing to the cursor.
+     * This view will reflect writes to the cursor and vice versa until a cursor write that requires allocating a new internal buffer happens.
+     */
     get buffer(): ArrayBuffer {
         return this._buffer.slice(0, this.size);
     }
@@ -72,22 +116,43 @@ export default class ArrayBufferCursor {
         return this;
     }
 
+    /**
+     * Reads an unsigned 8-bit integer and increments position by 1.
+     */
     u8() {
         return this._dv.getUint8(this.position++);
     }
 
+    /**
+     * Reads an unsigned 16-bit integer and increments position by 2.
+     */
     u16() {
         const r = this._dv.getUint16(this.position, this.little_endian);
         this.position += 2;
         return r;
     }
 
+    /**
+     * Reads an unsigned 32-bit integer and increments position by 4.
+     */
     u32() {
         const r = this._dv.getUint32(this.position, this.little_endian);
         this.position += 4;
         return r;
     }
 
+    /**
+     * Reads a signed 32-bit integer and increments position by 4.
+     */
+    i32() {
+        const r = this._dv.getInt32(this.position, this.little_endian);
+        this.position += 4;
+        return r;
+    }
+
+    /**
+     * Reads an unsigned 32-bit floating point number and increments position by 4.
+     */
     f32() {
         const r = this._dv.getFloat32(this.position, this.little_endian);
         this.position += 4;
@@ -111,7 +176,7 @@ export default class ArrayBufferCursor {
     }
 
     /**
-     * Consumes upto max_byte_length bytes.
+     * Consumes up to max_byte_length bytes.
      */
     string_ascii(max_byte_length: number, null_terminated: boolean, drop_remaining: boolean) {
         const string_end = null_terminated
@@ -139,7 +204,7 @@ export default class ArrayBufferCursor {
     }
 
     /**
-     * Grows the cursor if necessary.
+     * Writes an unsigned 8-bit integer and increments position by 1. If necessary, grows the cursor and reallocates the underlying buffer.
      */
     write_u8(value: number) {
         this._ensure_capacity(this.position + 1);
@@ -154,7 +219,7 @@ export default class ArrayBufferCursor {
     }
 
     /**
-     * Grows the cursor if necessary.
+     * Writes the contents of other and increments position by the size of other. If necessary, grows the cursor and reallocates the underlying buffer.
      */
     write_cursor(other: ArrayBufferCursor) {
         this._ensure_capacity(this.position + other.size);
@@ -168,6 +233,10 @@ export default class ArrayBufferCursor {
 
         return this;
     }
+
+    //
+    // Private methods
+    //
 
     _index_of_u8(value: number, max_byte_length: number) {
         const max_pos = Math.min(this.position + max_byte_length, this.size);

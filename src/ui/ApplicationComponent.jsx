@@ -4,10 +4,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { current_area_id_changed, new_file } from '../actions';
 import { Style } from './utils';
-import Area3DComponent from './Area3DComponent';
-import QuestInfoComponent from './QuestInfoComponent';
+import { Area3DComponent } from './Area3DComponent';
+import { QuestInfoComponent } from './QuestInfoComponent';
 
-class ApplicationComponent extends React.Component {
+class ApplicationComponentRaw extends React.Component {
     _main_container_style = Object.assign(Style.fill(), {
         display: 'flex',
         flexDirection: 'column'
@@ -76,9 +76,9 @@ class ApplicationComponent extends React.Component {
     }
 }
 
-export default connect(
+export const ApplicationComponent = connect(
     state => ({
         current_area_id: state.get('current_area_id'),
         area_ids: state.getIn(['current_quest', 'area_ids'], OrderedSet())
     })
-)(ApplicationComponent);
+)(ApplicationComponentRaw);

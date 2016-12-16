@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware, compose } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import { AREA_LOADED, CURRENT_AREA_ID_CHANGED, NEW_QUEST } from './actions';
-import ApplicationComponent from './ui/ApplicationComponent';
+import { ApplicationComponent } from './ui/ApplicationComponent';
 
 const compose_enhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 

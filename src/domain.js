@@ -9,6 +9,7 @@ export const Quest = Record({
     name: null,
     short_description: null,
     long_description: null,
+    episode: 1,
     area_ids: OrderedSet(),
     npcs: List()
 });

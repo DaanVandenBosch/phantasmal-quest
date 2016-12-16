@@ -1,5 +1,5 @@
 // @flow
-import ArrayBufferCursor from './ArrayBufferCursor';
+import { ArrayBufferCursor } from './ArrayBufferCursor';
 import * as prs from './prs';
 import { parse_dat } from './dat';
 import { parse_bin } from './bin';
