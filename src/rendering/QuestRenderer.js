@@ -40,22 +40,24 @@ export class QuestRenderer {
         this._camera.updateProjectionMatrix();
     }
 
-    set quest(quest: Quest) {
+    set_quest_and_area(quest: Quest, area: any) {
+        let update = false;
+
         if (!is(this._quest, quest)) {
             this._quest = quest;
             this._npcs = quest.npcs
                 .groupBy(npc => npc.area_id)
                 .sortBy(npc => npc.area_id)
                 .toOrderedMap();
-
-            this._update_geometry();
+            update = true;
         }
-    }
 
-    set area(area: any) {
         if (!is(this._area, area)) {
             this._area = area;
+            update = true;
+        }
 
+        if (update) {
             this._update_geometry();
         }
     }
@@ -67,7 +69,7 @@ export class QuestRenderer {
         if (this._quest && this._area) {
             const episode = this._quest.episode;
             const area_id = this._area.id;
-            const variant = this._quest.areas.get(this._area.id);
+            const variant = this._quest.areas.get(this._area.id) || 0;
 
             get_area_collision_geometry(episode, area_id, variant).then(geometry => {
                 if (this._quest && this._area) {

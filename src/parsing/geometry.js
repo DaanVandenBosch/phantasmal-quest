@@ -242,7 +242,7 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
         return v[0] === w[0] && v[1] === w[1] && v[2] === w[2];
     }
 
-    sections.forEach((section, i) => {
+    sections.forEach((_, i) => {
         const positions = position_lists_list[i];
         const normals = normal_lists_list[i];
         const geom_index_lists = index_lists_list[i];

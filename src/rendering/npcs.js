@@ -20,6 +20,8 @@ export function create_npc_geometry(npcs: List<any>, sections: any[]): Object3D 
             x += sec_x;
             y += sec_y;
             z += sec_z;
+        } else {
+            console.warn(`NPC section ${npc.section_id} not found.`);
         }
 
         const cylinder = new CylinderGeometry(6, 6, 30);

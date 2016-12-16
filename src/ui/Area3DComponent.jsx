@@ -11,8 +11,7 @@ class Area3DComponentRaw extends React.Component {
     }
 
     componentWillReceiveProps({quest, area}) {
-        this._renderer.quest = quest;
-        this._renderer.area = area;
+        this._renderer.set_quest_and_area(quest, area);
     }
 
     shouldComponentUpdate() {
