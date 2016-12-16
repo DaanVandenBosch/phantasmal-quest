@@ -15,11 +15,11 @@ export function create_npc_geometry(npcs: List<any>, sections: any[]): Object3D 
             const sin_section_rotation = Math.sin(section.y_axis_rotation);
             const cos_section_rotation = Math.cos(section.y_axis_rotation);
 
-            x = cos_section_rotation * x + sin_section_rotation * z;
-            z = -sin_section_rotation * x + cos_section_rotation * z;
-            x += sec_x;
+            const rot_x = cos_section_rotation * x + sin_section_rotation * z;
+            const rot_z = -sin_section_rotation * x + cos_section_rotation * z;
+            x = rot_x + sec_x;
             y += sec_y;
-            z += sec_z;
+            z = rot_z + sec_z;
         } else {
             console.warn(`NPC section ${npc.section_id} not found.`);
         }
