@@ -7,10 +7,6 @@ const style = {
     margin: 10
 };
 
-const header_style = {
-    textAlign: 'left'
-}
-
 const description_style = {
     whiteSpace: 'pre',
     padding: '10px 0'
