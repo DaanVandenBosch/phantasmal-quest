@@ -2,9 +2,14 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 const style = {
-    minWidth: 200,
+    borderCollapse: 'collapse',
+    width: 280,
     margin: 10
 };
+
+const header_style = {
+    textAlign: 'left'
+}
 
 const description_style = {
     whiteSpace: 'pre',
@@ -14,13 +19,22 @@ const description_style = {
 function QuestInfoComponentRaw({quest}) {
     if (quest) {
         const episode = quest.episode === 4 ? 'IV' : (quest.episode === 2 ? 'II' : 'I');
+
         return (
             <table style={style}>
                 <tbody>
-                    <tr><th colSpan="2">{quest.name}</th></tr>
-                    <tr><td colSpan="2" style={description_style}>{quest.short_description}</td></tr>
-                    <tr><td colSpan="2" style={description_style}>{quest.long_description}</td></tr>
-                    <tr><td>Episode:</td><td>{episode}</td></tr>
+                    <tr>
+                        <td>Name:</td><td>{quest.name}</td>
+                    </tr>
+                    <tr>
+                        <td>Episode:</td><td>{episode}</td>
+                    </tr>
+                    <tr>
+                        <td colSpan="2" style={description_style}>{quest.short_description}</td>
+                    </tr>
+                    <tr>
+                        <td colSpan="2" style={description_style}>{quest.long_description}</td>
+                    </tr>
                 </tbody>
             </table>
         );

@@ -15,7 +15,7 @@ export function get_area_sections(
     area_id: number,
     area_variant: number
 ): Promise<any[]> {
-    const sections = sections_cache.get(`${area_id}-${area_variant}`);
+    const sections = sections_cache.get(`${episode}-${area_id}-${area_variant}`);
 
     if (sections) {
         return sections;
@@ -30,7 +30,7 @@ export function get_area_render_geometry(
     area_id: number,
     area_variant: number
 ): Promise<Object3D> {
-    const object_3d = render_geometry_cache.get(`${area_id}-${area_variant}`);
+    const object_3d = render_geometry_cache.get(`${episode}-${area_id}-${area_variant}`);
 
     if (object_3d) {
         return object_3d;
@@ -45,7 +45,7 @@ export function get_area_collision_geometry(
     area_id: number,
     area_variant: number
 ): Promise<Object3D> {
-    const object_3d = collision_geometry_cache.get(`${area_id}-${area_variant}`);
+    const object_3d = collision_geometry_cache.get(`${episode}-${area_id}-${area_variant}`);
 
     if (object_3d) {
         return object_3d;
@@ -72,8 +72,8 @@ function get_area_sections_and_render_geometry(
         promise.then(({object_3d}) => resolve(object_3d)).catch(reject);
     });
 
-    sections_cache.set(`${area_id}-${area_variant}`, sections);
-    render_geometry_cache.set(`${area_id}-${area_variant}`, object_3d);
+    sections_cache.set(`${episode}-${area_id}-${area_variant}`, sections);
+    render_geometry_cache.set(`${episode}-${area_id}-${area_variant}`, object_3d);
 
     return promise;
 }
