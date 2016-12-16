@@ -1,4 +1,7 @@
 // @flow
+/*eslint no-labels: ["off"]*/
+/*eslint no-restricted-syntax: ["off"]*/
+/*eslint no-use-before-define: ["off"]*/
 import { ArrayBufferCursor } from './ArrayBufferCursor';
 
 export function parse_bin(cursor: ArrayBufferCursor) {
@@ -41,7 +44,6 @@ function parse_object_code(cursor: ArrayBufferCursor): Instruction[] {
         const main_opcode = cursor.u8();
         let opcode;
         let opsize;
-        let args_size;
         let list;
 
         switch (main_opcode) {
