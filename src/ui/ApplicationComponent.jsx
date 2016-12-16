@@ -39,7 +39,7 @@ class ApplicationComponentRaw extends React.Component {
                 <div style={this._header_style}>
                     <h1>Phantasmal Quest Viewer</h1>
                     <div style={this._controls}>
-                        <input type="file" onChange={this._on_file_change} />
+                        <input type="file" accept=".qst" onChange={this._on_file_change} />
                         {this.props.area_ids.isEmpty() ? null : (
                             <select
                                 style={this._area_select}

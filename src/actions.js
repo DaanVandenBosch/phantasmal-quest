@@ -42,7 +42,7 @@ export function new_file(file: File) {
                 dispatch(new_quest(quest));
 
                 for (const [id, variant] of quest.areas.entries()) {
-                    get_area_sections(id, variant).then(sections =>
+                    get_area_sections(quest.episode, id, variant).then(sections =>
                         dispatch(area_loaded({ id, sections })));
                 }
             }

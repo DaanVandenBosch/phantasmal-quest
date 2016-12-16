@@ -11,6 +11,7 @@ const render_geometry_cache: Map<string, Promise<Object3D>> = new Map();
 const collision_geometry_cache: Map<string, Promise<Object3D>> = new Map();
 
 export function get_area_sections(
+    episode: number,
     area_id: number,
     area_variant: number
 ): Promise<any[]> {
@@ -20,11 +21,12 @@ export function get_area_sections(
         return sections;
     } else {
         return get_area_sections_and_render_geometry(
-            area_id, area_variant).then(({sections}) => sections);
+            episode, area_id, area_variant).then(({sections}) => sections);
     }
 }
 
 export function get_area_render_geometry(
+    episode: number,
     area_id: number,
     area_variant: number
 ): Promise<Object3D> {
@@ -34,11 +36,12 @@ export function get_area_render_geometry(
         return object_3d;
     } else {
         return get_area_sections_and_render_geometry(
-            area_id, area_variant).then(({object_3d}) => object_3d);
+            episode, area_id, area_variant).then(({object_3d}) => object_3d);
     }
 }
 
 export function get_area_collision_geometry(
+    episode: number,
     area_id: number,
     area_variant: number
 ): Promise<Object3D> {
@@ -47,17 +50,20 @@ export function get_area_collision_geometry(
     if (object_3d) {
         return object_3d;
     } else {
-        const object_3d = get_area_collision_data(area_id, area_variant).then(parse_c_rel);
+        const object_3d = get_area_collision_data(
+            episode, area_id, area_variant).then(parse_c_rel);
         collision_geometry_cache.set(`${area_id}-${area_variant}`, object_3d);
         return object_3d;
     }
 }
 
 function get_area_sections_and_render_geometry(
+    episode: number,
     area_id: number,
     area_variant: number
 ): Promise<{ sections: any[], object_3d: Object3D }> {
-    const promise = get_area_render_data(area_id, area_variant).then(parse_n_rel);
+    const promise = get_area_render_data(
+        episode, area_id, area_variant).then(parse_n_rel);
 
     const sections = new Promise((resolve, reject) => {
         promise.then(({sections}) => resolve(sections)).catch(reject);

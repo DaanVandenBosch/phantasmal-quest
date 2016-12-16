@@ -65,10 +65,11 @@ export class QuestRenderer {
         this._scene.remove(this._npc_geometry);
 
         if (this._quest && this._area) {
+            const episode = this._quest.episode;
             const area_id = this._area.id;
             const variant = this._quest.areas.get(this._area.id);
 
-            get_area_collision_geometry(area_id, variant).then(geometry => {
+            get_area_collision_geometry(episode, area_id, variant).then(geometry => {
                 if (this._quest && this._area) {
                     this._scene.remove(this._collision_geometry);
                     this._scene.remove(this._npc_geometry);
