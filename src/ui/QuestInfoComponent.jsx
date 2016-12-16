@@ -13,7 +13,7 @@ const description_style = {
 
 function QuestInfoComponentRaw({quest}) {
     if (quest) {
-        const episode = quest.episode === 4 ? 'IV' : (quest.episode == 2 ? 'II' : 'I');
+        const episode = quest.episode === 4 ? 'IV' : (quest.episode === 2 ? 'II' : 'I');
         return (
             <table style={style}>
                 <tbody>

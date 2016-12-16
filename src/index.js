@@ -20,9 +20,12 @@ const store = createStore(
                 return state.set('current_area_id', action.payload);
             case NEW_QUEST:
                 const quest = action.payload;
+                const current_area_id = quest.areas.isEmpty()
+                    ? null
+                    : quest.areas.keySeq().first();
                 return state.merge({
                     current_quest: quest,
-                    current_area_id: quest.area_ids.first()
+                    current_area_id
                 });
             default:
                 return state;

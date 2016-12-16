@@ -1,5 +1,5 @@
 // @flow
-import { Record, List, OrderedSet } from 'immutable';
+import { Record, List, OrderedMap } from 'immutable';
 
 export const NPC = Record({
     id: null
@@ -10,7 +10,7 @@ export const Quest = Record({
     short_description: null,
     long_description: null,
     episode: 1,
-    area_ids: OrderedSet(),
+    areas: OrderedMap(),
     npcs: List()
 });
 

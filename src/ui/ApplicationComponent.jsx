@@ -1,5 +1,5 @@
 // @flow
-import { OrderedSet } from 'immutable';
+import { OrderedMap } from 'immutable';
 import React from 'react';
 import { connect } from 'react-redux';
 import { current_area_id_changed, new_file } from '../actions';
@@ -79,6 +79,6 @@ class ApplicationComponentRaw extends React.Component {
 export const ApplicationComponent = connect(
     state => ({
         current_area_id: state.get('current_area_id'),
-        area_ids: state.getIn(['current_quest', 'area_ids'], OrderedSet())
+        area_ids: state.getIn(['current_quest', 'areas'], OrderedMap()).keySeq()
     })
 )(ApplicationComponentRaw);

@@ -41,9 +41,9 @@ export function new_file(file: File) {
                 const quest = parse_quest(new ArrayBufferCursor(reader.result, true));
                 dispatch(new_quest(quest));
 
-                for (const area_id of quest.npcs.map(npc => npc.area_id).toSet()) {
-                    get_area_sections(area_id).then(sections =>
-                        dispatch(area_loaded({ id: area_id, sections })));
+                for (const [id, variant] of quest.areas.entries()) {
+                    get_area_sections(id, variant).then(sections =>
+                        dispatch(area_loaded({ id, sections })));
                 }
             }
         });

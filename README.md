@@ -7,8 +7,8 @@ This editor is in a very early stage of development.
 ### Getting Started
 
 1. Install Yarn ([https://yarnpkg.com/](https://yarnpkg.com/))
-2. cd to project directory
-3. Launch server on localhost:3000 with `yarn start`
+2. cd to the project directory
+3. Launch server on [http://localhost:3000/](http://localhost:3000/) with `yarn start`
 
 ### Tests
 Run tests with `yarn test`.
