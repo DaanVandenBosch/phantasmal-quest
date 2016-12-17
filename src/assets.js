@@ -68,13 +68,13 @@ function area_version_to_base_url(
             ['jungle04_', 3],
             ['jungle05_00', 1],
             ['jungle06_00', 1],
-            ['jungle07_', 5],
-            ['seabed01_', 3],
             ['seabed02_', 3],
             ['boss05', 1],
             ['boss06', 1],
             ['boss07', 1],
-            ['boss08', 1]
+            ['boss08', 1],
+            ['seabed01_', 3],
+            ['jungle07_', 5]
         ],
         [
             // Don't remove, see usage of base_names below.

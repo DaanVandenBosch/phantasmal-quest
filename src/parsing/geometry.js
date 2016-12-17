@@ -1,4 +1,5 @@
 // @flow
+import { OrderedSet } from 'immutable';
 import {
     BufferAttribute,
     BufferGeometry,
@@ -85,9 +86,11 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
     return object;
 }
 
-export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], object_3d: Object3D } {
+export function parse_n_rel(
+    array_buffer: ArrayBuffer
+): { sections: OrderedSet<*>, object_3d: Object3D } {
     const dv = new DataView(array_buffer);
-    const sections = [];
+    const sections = new Map();
     const index_lists_list = [];
     const position_lists_list = [];
     const normal_lists_list = [];
@@ -102,13 +105,20 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
         i < section_table_offset + section_count * 52;
         i += 52
     ) {
-        const section_id = dv.getUint32(i, true);
+        const section_id = dv.getInt32(i, true);
         const section_x = dv.getFloat32(i + 4, true);
         const section_y = dv.getFloat32(i + 8, true);
         const section_z = dv.getFloat32(i + 12, true);
         const section_rotation = dv.getUint32(i + 20, true) / 65536 * 2 * Math.PI;
         const sin_section_rotation = Math.sin(section_rotation);
         const cos_section_rotation = Math.cos(section_rotation);
+
+        sections.set(section_id, {
+            id: section_id,
+            position: [section_x, section_y, section_z],
+            y_axis_rotation: section_rotation
+        });
+
         const simple_geometry_offset_table_offset = dv.getUint32(i + 32, true);
         // const complex_geometry_offset_table_offset = dv.getUint32(i + 36, true);
         const simple_geometry_offset_count = dv.getUint32(i + 40, true);
@@ -132,7 +142,7 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
 
             if (geometry_offset > 0) {
                 const vertex_info_table_offset = dv.getUint32(geometry_offset + 4, true);
-                // const vertex_info_count = dv.getUint32(block_offset + 8, true);
+                const vertex_info_count = dv.getUint32(geometry_offset + 8, true);
                 const triangle_strip_table_offset = dv.getUint32(geometry_offset + 12, true);
                 const triangle_strip_count = dv.getUint32(geometry_offset + 16, true);
                 // const transparent_object_table_offset = dv.getUint32(block_offset + 20, true);
@@ -170,6 +180,10 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
                 // TODO: Do the previous for the transparent index table.
 
                 // Assume vertex_info_count == 1. TODO: Does that make sense?
+                if (vertex_info_count > 1) {
+                    console.warn(`Vertex info count of ${vertex_info_count} was larger than expected.`);
+                }
+
                 // const vertex_type = dv.getUint32(vertex_info_table_offset, true);
                 const vertex_table_offset = dv.getUint32(vertex_info_table_offset + 4, true);
                 const vertex_size = dv.getUint32(vertex_info_table_offset + 8, true);
@@ -203,7 +217,7 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
                             // TODO: color, texture coords.
                             break;
                         default:
-                            // console.error(`Unexpected vertex size of ${vertex_size}.`);
+                            console.error(`Unexpected vertex size of ${vertex_size}.`);
                             continue;
                     }
 
@@ -221,12 +235,6 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
                     geom_normals.push(n_z);
                 }
 
-                sections.push({
-                    id: section_id,
-                    position: [section_x, section_y, section_z],
-                    y_axis_rotation: section_rotation
-                });
-
                 index_lists_list.push(geom_index_lists);
                 position_lists_list.push(geom_positions);
                 normal_lists_list.push(geom_normals);
@@ -242,7 +250,7 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
         return v[0] === w[0] && v[1] === w[1] && v[2] === w[2];
     }
 
-    sections.forEach((_, i) => {
+    for (let i = 0; i < position_lists_list.length; ++i) {
         const positions = position_lists_list[i];
         const normals = normal_lists_list[i];
         const geom_index_lists = index_lists_list[i];
@@ -304,10 +312,10 @@ export function parse_n_rel(array_buffer: ArrayBuffer): { sections: any[], objec
         );
         // wireframe_mesh.setDrawMode(THREE.TriangleStripDrawMode);
         object.add(wireframe_mesh);
-    });
+    }
 
     return {
-        sections,
+        sections: new OrderedSet(sections.values()).sortBy(s => s.id),
         object_3d: object
     };
 }
