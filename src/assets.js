@@ -33,67 +33,67 @@ function get_asset(url: string): Promise<ArrayBuffer> {
     }
 }
 
+const area_base_names = [
+    [
+        ['city00_00', 1],
+        ['forest01', 1],
+        ['forest02', 1],
+        ['cave01_', 6],
+        ['cave02_', 5],
+        ['cave03_', 6],
+        ['machine01_', 6],
+        ['machine02_', 6],
+        ['ancient01_', 5],
+        ['ancient02_', 5],
+        ['ancient03_', 5],
+        ['boss01', 1],
+        ['boss02', 1],
+        ['boss03', 1],
+        ['darkfalz00', 1]
+    ],
+    [
+        ['labo00_00', 1],
+        ['ruins01_', 3],
+        ['ruins02_', 3],
+        ['space01_', 3],
+        ['space02_', 3],
+        ['jungle01_00', 1],
+        ['jungle02_00', 1],
+        ['jungle03_00', 1],
+        ['jungle04_', 3],
+        ['jungle05_00', 1],
+        ['jungle06_00', 1],
+        ['seabed02_', 3],
+        ['boss05', 1],
+        ['boss06', 1],
+        ['boss07', 1],
+        ['boss08', 1],
+        ['seabed01_', 3],
+        ['jungle07_', 5]
+    ],
+    [
+        // Don't remove, see usage of area_base_names in area_version_to_base_url.
+    ],
+    [
+        ['city02_00', 1],
+        ['wilds01_00', 1],
+        ['wilds01_01', 1],
+        ['wilds01_02', 1],
+        ['wilds01_03', 1],
+        ['crater01_00', 1],
+        ['desert01_', 3],
+        ['desert02_', 3],
+        ['desert03_', 3],
+        ['boss09_00', 1]
+    ]
+];
+
 function area_version_to_base_url(
     episode: number,
     area_id: number,
     area_variant: number
 ): string {
-    const base_names = [
-        [
-            ['city00_00', 1],
-            ['forest01', 1],
-            ['forest02', 1],
-            ['cave01_', 6],
-            ['cave02_', 5],
-            ['cave03_', 6],
-            ['machine01_', 6],
-            ['machine02_', 6],
-            ['ancient01_', 5],
-            ['ancient02_', 5],
-            ['ancient03_', 5],
-            ['boss01', 1],
-            ['boss02', 1],
-            ['boss03', 1],
-            ['darkfalz00', 1]
-        ],
-        [
-            ['labo00_00', 1],
-            ['ruins01_', 3],
-            ['ruins02_', 3],
-            ['space01_', 3],
-            ['space02_', 3],
-            ['jungle01_00', 1],
-            ['jungle02_00', 1],
-            ['jungle03_00', 1],
-            ['jungle04_', 3],
-            ['jungle05_00', 1],
-            ['jungle06_00', 1],
-            ['seabed02_', 3],
-            ['boss05', 1],
-            ['boss06', 1],
-            ['boss07', 1],
-            ['boss08', 1],
-            ['seabed01_', 3],
-            ['jungle07_', 5]
-        ],
-        [
-            // Don't remove, see usage of base_names below.
-        ],
-        [
-            ['city02_00', 1],
-            ['wilds01_00', 1],
-            ['wilds01_01', 1],
-            ['wilds01_02', 1],
-            ['wilds01_03', 1],
-            ['crater01_00', 1],
-            ['desert01_', 3],
-            ['desert02_', 3],
-            ['desert03_', 3],
-            ['boss09_00', 1]
-        ]
-    ];
-
-    const episode_base_names = base_names[episode - 1];
+    const episode_base_names = area_base_names[episode - 1];
 
     if (0 <= area_id && area_id < episode_base_names.length) {
         const [base_name, variants] = episode_base_names[area_id];

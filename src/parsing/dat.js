@@ -18,7 +18,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
             const start_position = cursor.position;
 
             for (let i = 0; i < npc_count; ++i) {
-                const type = cursor.u32();
+                const type_id = cursor.u32();
                 cursor.seek(2);
                 const clone_count = cursor.u16();
                 cursor.seek(4);
@@ -35,7 +35,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                 const rt_index = cursor.u32(); // ?
 
                 npcs.push({
-                    type,
+                    type_id,
                     clone_count,
                     section_id,
                     position: [x, y, z],

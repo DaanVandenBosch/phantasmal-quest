@@ -1,8 +1,9 @@
 // @flow
 import { List, OrderedSet } from 'immutable';
 import { CylinderGeometry, Mesh, MeshLambertMaterial, Object3D } from 'three';
+import { Npc } from '../domain';
 
-export function create_npc_geometry(npcs: List<any>, sections: OrderedSet<any>): Object3D {
+export function create_npc_geometry(npcs: List<Npc>, sections: OrderedSet<any>): Object3D {
     const object = new Object3D();
 
     for (const npc of npcs) {
