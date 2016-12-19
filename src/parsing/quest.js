@@ -217,8 +217,8 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x00E1}, 0, 2`: return NpcType.IllGill;
 
         case `${0x0110}, 0, 4`: return NpcType.Astark;
-        case `${0x0111}, 0, 4`: return NpcType.SatelliteLizard;
-        case `${0x0111}, 1, 4`: return NpcType.Yowie;
+        case `${0x0111}, 0, 4`: return regular ? NpcType.SatelliteLizard : NpcType.Yowie;
+        case `${0x0111}, 1, 4`: return regular ? NpcType.SatelliteLizard : NpcType.Yowie;
         case `${0x0112}, 0, 4`: return NpcType.MerissaA;
         case `${0x0112}, 1, 4`: return NpcType.MerissaAA;
         case `${0x0113}, 0, 4`: return NpcType.Girtablulu;
