@@ -1,6 +1,27 @@
 // @flow
 import { Record, List, OrderedMap } from 'immutable';
 
+export class Obj extends Record({
+    area_id: 0,
+    section_id: 0,
+    position: [0, 0, 0]
+}) {
+    area_id: number;
+    section_id: number;
+    position: [number, number, number];
+
+    constructor(
+        area_id: number,
+        section_id: number,
+        position: [number, number, number]
+    ) {
+        if (!position) throw new Error('position is required.');
+        if (position.length !== 3) throw new Error('position should have 3 elements.');
+
+        super({ area_id, section_id, position });
+    }
+}
+
 export class NpcType extends Record({
     id: null,
     name: '',
@@ -189,6 +210,7 @@ export const Quest = Record({
     long_description: null,
     episode: 1,
     areas: OrderedMap(),
+    objs: List(),
     npcs: List()
 });
 

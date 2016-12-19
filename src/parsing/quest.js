@@ -2,7 +2,7 @@
 import { List, OrderedMap } from 'immutable';
 import { ArrayBufferCursor } from './ArrayBufferCursor';
 import { parse_qst } from './qst';
-import { Npc, NpcType, Quest } from '../domain';
+import { Npc, NpcType, Obj, Quest } from '../domain';
 
 /**
  * High level parsing function that delegates to lower level parsing functions.
@@ -33,6 +33,7 @@ export function parse_quest(cursor: ArrayBufferCursor): Quest {
         long_description: bin.long_description,
         episode,
         areas,
+        objs: parse_obj_data(episode, dat.objs),
         npcs: parse_npc_data(episode, dat.npcs)
     });
 }
@@ -90,6 +91,16 @@ function get_func_operations(operations: any[], func_offset: number) {
     }
 
     return func_found ? func_ops : null;
+}
+
+function parse_obj_data(episode: number, objs: List<any>): List<Obj> {
+    return objs.map(
+        obj_data => new Obj(
+            obj_data.area_id,
+            obj_data.section_id,
+            obj_data.position
+        )
+    );
 }
 
 function parse_npc_data(episode: number, npcs: List<any>): List<Npc> {

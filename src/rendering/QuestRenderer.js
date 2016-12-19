@@ -5,7 +5,7 @@ import { HemisphereLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } fro
 import OrbitControlsCreator from 'three-orbit-controls';
 import { Quest } from '../domain';
 import { get_area_collision_geometry } from '../area-data';
-import { create_npc_geometry } from './npcs';
+import { create_obj_geometry, create_npc_geometry } from './entities';
 
 const OrbitControls = OrbitControlsCreator(THREE);
 
@@ -19,8 +19,10 @@ export class QuestRenderer {
     _scene = new Scene();
     _quest: ?Quest = null;
     _area = null;
-    _npcs = Map();
+    _objs = new Map();
+    _npcs = new Map();
     _collision_geometry = null;
+    _obj_geometry = null;
     _npc_geometry = null;
 
     constructor() {
@@ -45,6 +47,10 @@ export class QuestRenderer {
 
         if (!is(this._quest, quest)) {
             this._quest = quest;
+            this._objs = quest.objs
+                .groupBy(obj => obj.area_id)
+                .sortBy(obj => obj.area_id)
+                .toOrderedMap();
             this._npcs = quest.npcs
                 .groupBy(npc => npc.area_id)
                 .sortBy(npc => npc.area_id)
@@ -64,6 +70,7 @@ export class QuestRenderer {
 
     _update_geometry() {
         this._scene.remove(this._collision_geometry);
+        this._scene.remove(this._obj_geometry);
         this._scene.remove(this._npc_geometry);
 
         if (this._quest && this._area) {
@@ -74,12 +81,21 @@ export class QuestRenderer {
             get_area_collision_geometry(episode, area_id, variant).then(geometry => {
                 if (this._quest && this._area) {
                     this._scene.remove(this._collision_geometry);
+                    this._scene.remove(this._obj_geometry);
                     this._scene.remove(this._npc_geometry);
 
                     this._reset_camera();
 
                     this._collision_geometry = geometry;
                     this._scene.add(geometry);
+
+                    const objs = this._objs.get(this._area.id);
+
+                    if (objs) {
+                        this._obj_geometry = create_obj_geometry(
+                            objs, this._area.sections);
+                        this._scene.add(this._obj_geometry);
+                    }
 
                     const npcs = this._npcs.get(this._area.id);
 

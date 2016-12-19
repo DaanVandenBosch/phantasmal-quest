@@ -10,10 +10,28 @@ import { parse_bin } from './bin';
 export function parse_qst(cursor: ArrayBufferCursor) {
     // Read headers.
     // A .qst file contains two 88-byte headers that describe the embedded .dat and .bin files.
+    let version = 'PC';
     let dat_file_name = null;
     let dat_size = 0;
     let bin_file_name = null;
     let bin_size = 0;
+
+    // Detect version.
+    const version_a = cursor.u8();
+    cursor.seek(1);
+    const version_b = cursor.u8();
+
+    if (version_a === 0x44) {
+        version = 'Dreamcast/GameCube';
+    } else if (version_a === 0x58) {
+        if (version_b === 0x44) {
+            version = 'Blue Burst';
+        }
+    } else if (version_a === 0xA6) {
+        version = 'Dreamcast download';
+    }
+
+    cursor.seek_start(0);
 
     for (let i = 0; i < 2; ++i) {
         cursor.seek(44);
@@ -43,6 +61,7 @@ export function parse_qst(cursor: ArrayBufferCursor) {
     const {dat_data, bin_data} = extract_file_data(cursor, dat_size, bin_size);
 
     return {
+        version,
         dat: parse_dat(prs.decompress(dat_data)),
         bin: parse_bin(prs.decompress(bin_data))
     };

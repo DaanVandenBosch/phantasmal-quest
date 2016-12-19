@@ -3,13 +3,27 @@ import { List, OrderedSet } from 'immutable';
 import { CylinderGeometry, Mesh, MeshLambertMaterial, Object3D } from 'three';
 import { Npc } from '../domain';
 
+export function create_obj_geometry(objs: List<Obj>, sections: OrderedSet<any>): Object3D {
+    return create_geometry(objs, sections, 0xffff00);
+}
+
 export function create_npc_geometry(npcs: List<Npc>, sections: OrderedSet<any>): Object3D {
+    return create_geometry(npcs, sections, 0xff0000);
+}
+
+type Entity = { position: [number, number, number], section_id: number };
+
+function create_geometry(
+    entities: List<Entity>,
+    sections: OrderedSet<any>,
+    color: number
+): Object3D {
     const object = new Object3D();
 
-    for (const npc of npcs) {
-        let [x, y, z] = npc.position;
+    for (const entity of entities) {
+        let [x, y, z] = entity.position;
 
-        const section = sections.find(s => s.id === npc.section_id);
+        const section = sections.find(s => s.id === entity.section_id);
 
         if (section) {
             const [sec_x, sec_y, sec_z] = section.position;
@@ -22,7 +36,7 @@ export function create_npc_geometry(npcs: List<Npc>, sections: OrderedSet<any>):
             y += sec_y;
             z = rot_z + sec_z;
         } else {
-            console.warn(`NPC section ${npc.section_id} not found.`);
+            console.warn(`Section ${entity.section_id} not found.`);
         }
 
         const cylinder = new CylinderGeometry(6, 6, 30);
@@ -31,7 +45,7 @@ export function create_npc_geometry(npcs: List<Npc>, sections: OrderedSet<any>):
             new Mesh(
                 cylinder,
                 new MeshLambertMaterial({
-                    color: 0xff0000,
+                    color,
                     transparent: true,
                     opacity: 0.8,
                 })
