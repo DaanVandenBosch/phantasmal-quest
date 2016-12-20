@@ -34,7 +34,6 @@ export class QuestRenderer {
     _collision_geometry = null;
     _obj_geometry = null;
     _npc_geometry = null;
-    _picking_data = null;
 
     constructor() {
         this._renderer.domElement.addEventListener(
@@ -139,22 +138,31 @@ export class QuestRenderer {
         requestAnimationFrame(this._render_loop);
     }
 
-    _on_mouse_down = (e: MouseEvent) => {
-        const old_data = this._picking_data;
-        this._pick_npc(this._pointer_pos_to_device_coords(e));
-        const data = this._picking_data;
+    _hovered_data = null;
+    _selected_data = null;
 
-        if (old_data && data !== old_data) {
-            old_data.object.material.color.set(0xff0000);
-            old_data.object.material.transparent = true;
-            old_data.selected = false;
+    _on_mouse_down = (e: MouseEvent) => {
+        const data = this._pick_npc(
+            this._pointer_pos_to_device_coords(e));
+
+        if (this._hovered_data && (!data || data.object !== this._hovered_data.object)) {
+            this._hovered_data.object.material.color.set(0xff0000);
+            this._hovered_data.object.material.transparent = true;
+        }
+
+        if (this._selected_data && (!data || data.object !== this._selected_data.object)) {
+             this._selected_data.object.material.color.set(0xff0000);
+             this._selected_data.object.material.transparent = true;
+             this._selected_data.manipulating = false;
         }
 
         if (data) {
             // User selected an entity.
-            data.object.material.color.set(0xff0000);
+            data.object.material.color.set(0xff0060);
             data.object.material.transparent = false;
-            data.selected = true;
+            data.manipulating = true;
+            this._hovered_data = data;
+            this._selected_data = data;
             this._controls.enabled = false;
         } else {
             this._controls.enabled = true;
@@ -162,50 +170,46 @@ export class QuestRenderer {
     }
 
     _on_mouse_up = (e: MouseEvent) => {
-        const data = this._picking_data;
-
-        if (data) {
-            data.object.material.color.set(0xff0000);
-            data.object.material.transparent = true;
-            data.selected = false;
+        if (this._selected_data) {
+            this._selected_data.manipulating = false;
+            this._controls.enabled = true;
         }
     }
 
     _on_mouse_move = (e: MouseEvent) => {
         const pointer_pos = this._pointer_pos_to_device_coords(e);
-        let data = this._picking_data;
 
-        if (data) {
-            if (data.selected) {
-                // User is dragging a selected entity.
-                // Cast ray adjusted for dragging entities.
-                const terrain = this._pick_terrain(pointer_pos);
+        if (this._selected_data && this._selected_data.manipulating) {
+            // User is dragging a selected entity.
+            const data = this._selected_data;
+            // Cast ray adjusted for dragging entities.
+            const terrain = this._pick_terrain(pointer_pos, data);
 
-                if (terrain) {
-                    data.object.position.copy(terrain.point);
-                    data.object.position.y += data.drag_y;
+            if (terrain) {
+                data.object.position.copy(terrain.point);
+                data.object.position.y += data.drag_y;
+            }
+        } else {
+            // User is hovering.
+            const old_data = this._hovered_data;
+            const data = this._pick_npc(pointer_pos);
+
+            if (old_data && (!data || data.object !== old_data.object)) {
+                if (!this._selected_data || old_data.object !== this._selected_data.object) {
+                    old_data.object.material.color.set(0xff0000);
+                    old_data.object.material.transparent = true;
                 }
 
-                return;
-            }
-        }
-
-        // User is hovering.
-        const old_data = data;
-        this._pick_npc(pointer_pos);
-        data = this._picking_data;
-
-        if (old_data !== data) {
-            if (old_data) {
-                old_data.object.material.color.set(0xff0000);
-                old_data.object.material.transparent = true;
-                old_data.selected = false;
+                this._hovered_data = null;
             }
 
-            if (data) {
-                data.object.material.color.set(0xff5050);
-                data.object.material.transparent = true;
-                data.selected = false;
+            if (data && (!old_data || data.object !== old_data.object)) {
+                if (!this._selected_data || data.object !== this._selected_data.object) {
+                    data.object.material.color.set(0xff3060);
+                    data.object.material.transparent = true;
+                }
+
+                this._hovered_data = data;
             }
         }
     }
@@ -220,10 +224,9 @@ export class QuestRenderer {
     /**
      * @param pointer_pos - pointer coordinates in normalized device space
      */
-    _pick_npc(pointer_pos: Vector2) {
+    _pick_npc(pointer_pos: Vector2): * {
         if (!this._npc_geometry) {
-            this._picking_data = null;
-            return;
+            return null;
         }
 
         // Find the nearest NPC under the pointer.
@@ -232,22 +235,14 @@ export class QuestRenderer {
             this._npc_geometry.children);
 
         if (!nearest_npc) {
-            this._picking_data = null;
-            return;
+            return null;
         }
 
-        if (this._picking_data
-            && nearest_npc.object === this._picking_data.object
-            && nearest_npc.distance === this._picking_data.distance
-        ) {
-            return;
-        }
-
-        this._picking_data = nearest_npc;
-        this._picking_data.drag_adjust = nearest_npc.object.position
+        const data = nearest_npc;
+        data.drag_adjust = nearest_npc.object.position
             .clone()
             .sub(nearest_npc.point);
-        this._picking_data.drag_y = 0;
+        data.drag_y = 0;
 
         // Find vertical distance to terrain.
         this._raycaster.set(
@@ -256,18 +251,18 @@ export class QuestRenderer {
             this._collision_geometry.children[0], true);
 
         if (terrain) {
-            this._picking_data.drag_adjust.sub(
+            data.drag_adjust.sub(
                 new Vector3(0, terrain.distance, 0));
-            this._picking_data.drag_y += terrain.distance;
+            data.drag_y += terrain.distance;
         }
+
+        return data;
     }
 
     /**
      * @param pointer_pos - pointer coordinates in normalized device space
      */
-    _pick_terrain(pointer_pos: Vector2) {
-        let data = this._picking_data;
-
+    _pick_terrain(pointer_pos: Vector2, data: any): * {
         this._raycaster.setFromCamera(pointer_pos, this._camera);
         this._raycaster.ray.origin.add(data.drag_adjust);
         const terrains = this._raycaster.intersectObject(
