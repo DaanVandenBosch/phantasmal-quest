@@ -3,12 +3,14 @@ import { OrderedSet } from 'immutable';
 import {
     BufferAttribute,
     BufferGeometry,
+    DoubleSide,
     Face3,
     Geometry,
     Mesh,
     MeshBasicMaterial,
     MeshLambertMaterial,
     Object3D,
+    TriangleStripDrawMode,
     Vector3
 } from 'three';
 
@@ -246,72 +248,90 @@ export function parse_n_rel(
 
     const object = new Object3D();
 
-    function v_equal(v, w) {
-        return v[0] === w[0] && v[1] === w[1] && v[2] === w[2];
-    }
+    // function v_equal(v, w) {
+    //     return v[0] === w[0] && v[1] === w[1] && v[2] === w[2];
+    // }
 
     for (let i = 0; i < position_lists_list.length; ++i) {
         const positions = position_lists_list[i];
         const normals = normal_lists_list[i];
         const geom_index_lists = index_lists_list[i];
-        const indices = [];
+        // const indices = [];
 
         geom_index_lists.forEach(object_indices => {
-            for (let j = 2; j < object_indices.length; ++j) {
-                const a = object_indices[j - 2];
-                const b = object_indices[j - 1];
-                const c = object_indices[j];
+            // for (let j = 2; j < object_indices.length; ++j) {
+            //     const a = object_indices[j - 2];
+            //     const b = object_indices[j - 1];
+            //     const c = object_indices[j];
 
-                if (a !== b && a !== c && b !== c) {
-                    const ap = positions.slice(3 * a, 3 * a + 3);
-                    const bp = positions.slice(3 * b, 3 * b + 3);
-                    const cp = positions.slice(3 * c, 3 * c + 3);
+            //     if (a !== b && a !== c && b !== c) {
+            //         const ap = positions.slice(3 * a, 3 * a + 3);
+            //         const bp = positions.slice(3 * b, 3 * b + 3);
+            //         const cp = positions.slice(3 * c, 3 * c + 3);
 
-                    if (!v_equal(ap, bp) && !v_equal(ap, cp) && !v_equal(bp, cp)) {
-                        if (j % 2 === 0) {
-                            indices.push(a);
-                            indices.push(b);
-                            indices.push(c);
-                        } else {
-                            indices.push(b);
-                            indices.push(a);
-                            indices.push(c);
-                        }
-                    }
-                }
-            }
+            //         if (!v_equal(ap, bp) && !v_equal(ap, cp) && !v_equal(bp, cp)) {
+            //             if (j % 2 === 0) {
+            //                 indices.push(a);
+            //                 indices.push(b);
+            //                 indices.push(c);
+            //             } else {
+            //                 indices.push(b);
+            //                 indices.push(a);
+            //                 indices.push(c);
+            //             }
+            //         }
+            //     }
+            // }
+
+            const geometry = new BufferGeometry();
+            geometry.addAttribute(
+                'position', new BufferAttribute(new Float32Array(positions), 3));
+            geometry.addAttribute(
+                'normal', new BufferAttribute(new Float32Array(normals), 3));
+            geometry.setIndex(new BufferAttribute(new Uint16Array(object_indices), 1));
+
+            const mesh = new Mesh(
+                geometry,
+                new MeshLambertMaterial({
+                    color: 0x44aaff,
+                    // transparent: true,
+                    opacity: 0.25,
+                    side: DoubleSide
+                })
+            );
+            mesh.setDrawMode(TriangleStripDrawMode);
+            object.add(mesh);
         });
 
-        const geometry = new BufferGeometry();
-        geometry.addAttribute(
-            'position', new BufferAttribute(new Float32Array(positions), 3));
-        geometry.addAttribute(
-            'normal', new BufferAttribute(new Float32Array(normals), 3));
-        geometry.setIndex(new BufferAttribute(new Uint16Array(indices), 1));
+        // const geometry = new BufferGeometry();
+        // geometry.addAttribute(
+        //     'position', new BufferAttribute(new Float32Array(positions), 3));
+        // geometry.addAttribute(
+        //     'normal', new BufferAttribute(new Float32Array(normals), 3));
+        // geometry.setIndex(new BufferAttribute(new Uint16Array(indices), 1));
 
-        // const mesh = new THREE.Mesh(
+        // const mesh = new Mesh(
         //     geometry,
-        //     new THREE.MeshLambertMaterial({
+        //     new MeshLambertMaterial({
         //         color: 0x44aaff,
         //         transparent: true,
         //         opacity: 0.25,
-        //         side: THREE.DoubleSide
+        //         side: DoubleSide
         //     })
         // );
-        // mesh.setDrawMode(THREE.TriangleStripDrawMode);
         // object.add(mesh);
 
-        const wireframe_mesh = new Mesh(
-            geometry,
-            new MeshBasicMaterial({
-                color: 0x88ccff,
-                wireframe: true,
-                transparent: true,
-                opacity: 0.75,
-            })
-        );
+        // const wireframe_mesh = new Mesh(
+        //     geometry,
+        //     new MeshBasicMaterial({
+        //         color: 0x88ccff,
+        //         wireframe: true,
+        //         transparent: true,
+        //         opacity: 0.75,
+        //     })
+        // );
         // wireframe_mesh.setDrawMode(THREE.TriangleStripDrawMode);
-        object.add(wireframe_mesh);
+        // object.add(wireframe_mesh);
     }
 
     return {

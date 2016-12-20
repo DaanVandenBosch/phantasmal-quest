@@ -4,11 +4,11 @@ import { CylinderGeometry, Mesh, MeshLambertMaterial, Object3D } from 'three';
 import { Npc } from '../domain';
 
 export function create_obj_geometry(objs: List<Obj>, sections: OrderedSet<any>): Object3D {
-    return create_geometry(objs, sections, 0xffff00);
+    return create_geometry(objs, sections, 0xffff00, 'Object');
 }
 
 export function create_npc_geometry(npcs: List<Npc>, sections: OrderedSet<any>): Object3D {
-    return create_geometry(npcs, sections, 0xff0000);
+    return create_geometry(npcs, sections, 0xff0000, 'NPC');
 }
 
 type Entity = { position: [number, number, number], section_id: number };
@@ -16,7 +16,8 @@ type Entity = { position: [number, number, number], section_id: number };
 function create_geometry(
     entities: List<Entity>,
     sections: OrderedSet<any>,
-    color: number
+    color: number,
+    type: string
 ): Object3D {
     const object = new Object3D();
 
@@ -40,17 +41,18 @@ function create_geometry(
         }
 
         const cylinder = new CylinderGeometry(6, 6, 30);
-        cylinder.translate(x, y + 15, z);
-        object.add(
-            new Mesh(
-                cylinder,
-                new MeshLambertMaterial({
-                    color,
-                    transparent: true,
-                    opacity: 0.8,
-                })
-            )
+        cylinder.translate(0, 15, 0);
+        const cylinder_mesh = new Mesh(
+            cylinder,
+            new MeshLambertMaterial({
+                color,
+                transparent: true,
+                opacity: 0.8,
+            })
         );
+        cylinder_mesh.name = type;
+        cylinder_mesh.position.set(x, y, z);
+        object.add(cylinder_mesh);
     }
 
     return object;
