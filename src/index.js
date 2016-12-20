@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware, compose } from 'redux';
 import thunkMiddleware from 'redux-thunk';
-import { AREA_LOADED, CURRENT_AREA_ID_CHANGED, NEW_QUEST } from './actions';
+import { AREA_LOADED, CURRENT_AREA_ID_CHANGED, ENTITY_SELECTED, NEW_QUEST } from './actions';
 import { ApplicationComponent } from './ui/ApplicationComponent';
 
 const compose_enhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
@@ -18,6 +18,8 @@ const store = createStore(
                 return state.setIn(['areas', area.id], area);
             case CURRENT_AREA_ID_CHANGED:
                 return state.set('current_area_id', action.payload);
+            case ENTITY_SELECTED:
+                return state.set('selected_entity', action.payload);
             case NEW_QUEST:
                 const quest = action.payload;
                 const current_area_id = quest.areas.isEmpty()

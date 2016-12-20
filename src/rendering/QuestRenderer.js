@@ -2,6 +2,7 @@
 import { is, Map } from 'immutable';
 import * as THREE from 'three';
 import {
+    Color,
     HemisphereLight,
     PerspectiveCamera,
     Raycaster,
@@ -21,7 +22,7 @@ const OrbitControls = OrbitControlsCreator(THREE);
  * Renders one quest area at a time.
  */
 export class QuestRenderer {
-    _renderer = new WebGLRenderer({ antialias: true, alpha: true });
+    _renderer = new WebGLRenderer({ antialias: true });
     _camera: PerspectiveCamera;
     _controls: OrbitControls;
     _raycaster = new Raycaster();
@@ -34,8 +35,10 @@ export class QuestRenderer {
     _collision_geometry = null;
     _obj_geometry = null;
     _npc_geometry = null;
+    _on_select = null;
 
-    constructor() {
+    constructor({on_select}) {
+        this._on_select = on_select;
         this._renderer.domElement.addEventListener(
             'mousedown', this._on_mouse_down);
         this._renderer.domElement.addEventListener(
@@ -45,6 +48,7 @@ export class QuestRenderer {
         this._camera = new PerspectiveCamera(75, 1, 0.1, 5000);
         this._controls = new OrbitControls(
             this._camera, this._renderer.domElement);
+        this._scene.background = new Color(0x080808);
         this._scene.add(new HemisphereLight(0xffffff, 0x505050, 1));
         requestAnimationFrame(this._render_loop);
     }
@@ -166,6 +170,10 @@ export class QuestRenderer {
             this._controls.enabled = false;
         } else {
             this._controls.enabled = true;
+        }
+
+        if (this._on_select) {
+            this._on_select(data && data.object.entity);
         }
     }
 

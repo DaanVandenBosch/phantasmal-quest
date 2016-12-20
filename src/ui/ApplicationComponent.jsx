@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { current_area_id_changed, new_file } from '../actions';
 import { Style } from './utils';
 import { Area3DComponent } from './Area3DComponent';
+import { EntityInfoComponent } from './EntityInfoComponent';
 import { QuestInfoComponent } from './QuestInfoComponent';
 
 class ApplicationComponentRaw extends React.Component {
@@ -51,8 +52,9 @@ class ApplicationComponentRaw extends React.Component {
                     </div>
                 </div>
                 <div style={this._main_style}>
-                    <Area3DComponent style={this._area_3d_style} />
                     <QuestInfoComponent />
+                    <Area3DComponent style={this._area_3d_style} />
+                    <EntityInfoComponent />
                 </div>
             </div>
         );

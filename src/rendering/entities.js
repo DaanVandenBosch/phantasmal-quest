@@ -52,6 +52,7 @@ function create_geometry(
         );
         cylinder_mesh.name = type;
         cylinder_mesh.position.set(x, y, z);
+        cylinder_mesh.entity = entity;
         object.add(cylinder_mesh);
     }
 

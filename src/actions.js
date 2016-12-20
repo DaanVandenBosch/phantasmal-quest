@@ -12,6 +12,7 @@ import { get_area_sections } from './area-data';
 
 export const AREA_LOADED = 'AREA_LOADED';
 export const CURRENT_AREA_ID_CHANGED = 'CURRENT_AREA_ID_CHANGED';
+export const ENTITY_SELECTED = 'ENTITY_SELECTED';
 export const NEW_FILE = 'NEW_FILE';
 export const NEW_QUEST = 'NEW_QUEST';
 
@@ -25,6 +26,10 @@ export const NEW_QUEST = 'NEW_QUEST';
 
 export function area_loaded(area: any) {
     return { type: AREA_LOADED, payload: area };
+}
+
+export function entity_selected(entity: any) {
+    return { type: ENTITY_SELECTED, payload: entity };
 }
 
 export function new_quest(quest: any) {
