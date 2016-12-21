@@ -1,10 +1,8 @@
 // @flow
 import React from 'react';
-import { observer } from 'mobx-react';
 import { entity_selected } from '../actions';
 import { QuestRenderer } from '../rendering/QuestRenderer';
 
-@observer
 export class Area3DComponent extends React.Component {
     _renderer = new QuestRenderer({
         on_select: this._on_select.bind(this)

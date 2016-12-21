@@ -39,7 +39,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     id,
                     group,
                     section_id,
-                    position: [x, y, z],
+                    position: {x, y, z},
                     object_id,
                     action,
                     area_id
@@ -79,7 +79,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     type_id,
                     clone_count,
                     section_id,
-                    position: [x, y, z],
+                    position: {x, y, z},
                     direction,
                     movement_data,
                     regular,

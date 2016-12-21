@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {
     Color,
     HemisphereLight,
+    Object3D,
     PerspectiveCamera,
     Raycaster,
     Scene,
@@ -11,9 +12,8 @@ import {
     WebGLRenderer
 } from 'three';
 import OrbitControlsCreator from 'three-orbit-controls';
-import { Quest } from '../domain';
+import { Area, Quest } from '../domain';
 import { get_area_collision_geometry } from '../area-data';
-import { create_obj_geometry, create_npc_geometry } from './entities';
 
 const OrbitControls = OrbitControlsCreator(THREE);
 
@@ -28,27 +28,36 @@ export class QuestRenderer {
     _pointer_position = new Vector2(0, 0);
     _scene = new Scene();
     _quest: ?Quest = null;
-    _area = null;
+    _quest_entities_loaded = false;
+    _area: Area = null;
     _objs: Map<number, Obj[]> = new Map(); // Objs grouped by area id
     _npcs: Map<number, Npc[]> = new Map(); // Npcs grouped by area id
     _collision_geometry = null;
-    _obj_geometry = null;
-    _npc_geometry = null;
+    _obj_geometry = new Object3D();
+    _npc_geometry = new Object3D();
     _on_select = null;
+    _hovered_data = null;
+    _selected_data = null;
 
     constructor({on_select}) {
         this._on_select = on_select;
+
         this._renderer.domElement.addEventListener(
             'mousedown', this._on_mouse_down);
         this._renderer.domElement.addEventListener(
             'mouseup', this._on_mouse_up);
         this._renderer.domElement.addEventListener(
             'mousemove', this._on_mouse_move);
+
         this._camera = new PerspectiveCamera(75, 1, 0.1, 5000);
         this._controls = new OrbitControls(
             this._camera, this._renderer.domElement);
+
         this._scene.background = new Color(0x080808);
         this._scene.add(new HemisphereLight(0xffffff, 0x505050, 1));
+        this._scene.add(this._obj_geometry);
+        this._scene.add(this._npc_geometry);
+
         requestAnimationFrame(this._render_loop);
     }
 
@@ -62,8 +71,13 @@ export class QuestRenderer {
         this._camera.updateProjectionMatrix();
     }
 
-    set_quest_and_area(quest: Quest, area: any) {
+    set_quest_and_area(quest: Quest, area: Area) {
         let update = false;
+
+        if (this._area !== area) {
+            this._area = area;
+            update = true;
+        }
 
         if (this._quest !== quest) {
             this._quest = quest;
@@ -72,7 +86,7 @@ export class QuestRenderer {
             this._npcs.clear();
 
             if (quest) {
-                for (const obj of quest.objs) {
+                for (const obj of quest.objects) {
                     const array = this._objs.get(obj.area_id) || [];
                     array.push(obj);
                     this._objs.set(obj.area_id, array);
@@ -88,52 +102,36 @@ export class QuestRenderer {
             update = true;
         }
 
-        if (this._area !== area) {
-            this._area = area;
-            update = true;
-        }
-
         if (update) {
             this._update_geometry();
         }
     }
 
     _update_geometry() {
-        this._scene.remove(this._collision_geometry);
         this._scene.remove(this._obj_geometry);
         this._scene.remove(this._npc_geometry);
+        this._obj_geometry = new Object3D();
+        this._npc_geometry = new Object3D();
+        this._scene.add(this._obj_geometry);
+        this._scene.add(this._npc_geometry);
+        this._quest_entities_loaded = false;
+
+        this._scene.remove(this._collision_geometry);
 
         if (this._quest && this._area) {
             const episode = this._quest.episode;
             const area_id = this._area.id;
-            const variant = this._quest.area_variants.get(this._area.id) || 0;
+            const variant = this._quest.area_variants.find(v => v.area.id === area_id);
+            const variant_id = (variant && variant.id) || 0;
 
-            get_area_collision_geometry(episode, area_id, variant).then(geometry => {
+            get_area_collision_geometry(episode, area_id, variant_id).then(geometry => {
                 if (this._quest && this._area) {
                     this._scene.remove(this._collision_geometry);
-                    this._scene.remove(this._obj_geometry);
-                    this._scene.remove(this._npc_geometry);
 
                     this._reset_camera();
 
                     this._collision_geometry = geometry;
                     this._scene.add(geometry);
-
-                    const objs = this._objs.get(this._area.id);
-
-                    if (objs) {
-                        this._obj_geometry = create_obj_geometry(
-                            objs, this._area.sections);
-                        this._scene.add(this._obj_geometry);
-                    }
-
-                    const npcs = this._npcs.get(this._area.id);
-
-                    if (npcs) {
-                        this._npc_geometry = create_npc_geometry(
-                            npcs, this._area.sections);
-                        this._scene.add(this._npc_geometry);
-                    }
                 }
             });
         }
@@ -147,12 +145,38 @@ export class QuestRenderer {
 
     _render_loop = () => {
         this._controls.update();
+        this._add_loaded_entities();
         this._renderer.render(this._scene, this._camera);
         requestAnimationFrame(this._render_loop);
     }
 
-    _hovered_data = null;
-    _selected_data = null;
+    _add_loaded_entities() {
+        if (this._quest && this._area && !this._quest_entities_loaded) {
+            let loaded = true;
+
+            for (const object of this._quest.objects) {
+                if (object.area_id === this._area.id) {
+                    if (object.object3d) {
+                        this._obj_geometry.add(object.object3d);
+                    } else {
+                        loaded = false;
+                    }
+                }
+            }
+
+            for (const npc of this._quest.npcs) {
+                if (npc.area_id === this._area.id) {
+                    if (npc.object3d) {
+                        this._npc_geometry.add(npc.object3d);
+                    } else {
+                        loaded = false;
+                    }
+                }
+            }
+
+            this._quest_entities_loaded = loaded;
+        }
+    }
 
     _on_mouse_down = (e: MouseEvent) => {
         const old_selected_data = this._selected_data;
@@ -213,8 +237,11 @@ export class QuestRenderer {
             const terrain = this._pick_terrain(pointer_pos, data);
 
             if (terrain) {
-                data.object.position.copy(terrain.point);
-                data.object.position.y += data.drag_y;
+                data.object.entity.position = {
+                    x: terrain.point.x,
+                    y: terrain.point.y + data.drag_y,
+                    z: terrain.point.z,
+                };
             }
         } else {
             // User is hovering.

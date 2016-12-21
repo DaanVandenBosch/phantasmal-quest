@@ -1,5 +1,4 @@
 import React from 'react';
-import { observer } from 'mobx-react';
 import { NpcType, Quest } from '../domain';
 
 const container_style = {
@@ -22,7 +21,7 @@ const npc_counts_container_style = {
     overflow: 'auto'
 };
 
-export const QuestInfoComponent = observer(({quest}: { quest: ?Quest }) => {
+export function QuestInfoComponent({quest}: { quest: ?Quest }) {
     if (quest) {
         const episode = quest.episode === 4 ? 'IV' : (quest.episode === 2 ? 'II' : 'I');
         let npc_counts = new Map();
@@ -80,4 +79,4 @@ export const QuestInfoComponent = observer(({quest}: { quest: ?Quest }) => {
     } else {
         return <div style={container_style} />;
     }
-});
+}

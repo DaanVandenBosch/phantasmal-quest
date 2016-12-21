@@ -1,41 +1,162 @@
 // @flow
-import { observable } from 'mobx';
+import { Object3D } from 'three';
+import { observable, computed } from 'mobx';
 import { is_int } from './utils';
 
-export class Area {
-    id: number;
-    @observable sections: Section[];
+type Vec3 = { x: number, y: number, z: number };
 
-    constructor(id: number, sections: Section[]) {
-        if (!is_int(id) || id < 0)
-            throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
-        if (!sections) throw new Error('sections is required.');
+export class Quest {
+    @observable name: string;
+    @observable short_description: string;
+    @observable long_description: string;
+    @observable episode: number;
+    @observable area_variants: AreaVariant[];
+    @observable objects: QuestObject[];
+    @observable npcs: QuestNpc[];
 
-        this.id = id;
-        this.sections = sections;
+    constructor(
+        name: string,
+        short_description: string,
+        long_description: string,
+        episode: number,
+        area_variants: AreaVariant[],
+        objects: QuestObject[],
+        npcs: QuestNpc[]
+    ) {
+        if (episode !== 1 && episode !== 2 && episode !== 4) throw new Error('episode should be 1, 2 or 4.');
+        if (!objects) throw new Error('objs is required.');
+        if (!npcs) throw new Error('npcs is required.');
+
+        this.name = name;
+        this.short_description = short_description;
+        this.long_description = long_description;
+        this.episode = episode;
+        this.area_variants = area_variants;
+        this.objects = objects;
+        this.npcs = npcs;
     }
 }
 
-export class Obj {
+export interface VisibleQuestEntity {
+    area_id: number;
+    section_id: number;
+    position: Vec3;
+    object3d: Object3D
+}
+
+export class QuestObject implements VisibleQuestEntity {
     @observable area_id: number;
     @observable section_id: number;
-    @observable position: [number, number, number];
+    @observable position: Vec3;
 
     constructor(
         area_id: number,
         section_id: number,
-        position: [number, number, number]
+        position: Vec3
     ) {
         if (!is_int(area_id) || area_id < 0)
             throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
         if (!is_int(section_id) || section_id < 0)
             throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
         if (!position) throw new Error('position is required.');
-        if (position.length !== 3) throw new Error('position should have 3 elements.');
 
         this.area_id = area_id;
         this.section_id = section_id;
         this.position = position;
+    }
+}
+
+export class QuestNpc implements VisibleQuestEntity {
+    @observable type: NpcType;
+    @observable area_id: number;
+    @observable section_id: number;
+    @observable position: Vec3;
+
+    _object3d: ?Object3D = null;
+
+    constructor(
+        type: NpcType,
+        area_id: number,
+        section_id: number,
+        position: Vec3
+    ) {
+        if (!type) throw new Error('type is required.');
+        if (!is_int(area_id) || area_id < 0)
+            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
+        if (!is_int(section_id) || section_id < 0)
+            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
+        if (!position) throw new Error('position is required.');
+
+        this.type = type;
+        this.area_id = area_id;
+        this.section_id = section_id;
+        this.position = position;
+    }
+
+    @computed get object3d() {
+        if (this._object3d) {
+            this._object3d.position.x = this.position.x;
+            this._object3d.position.y = this.position.y;
+            this._object3d.position.z = this.position.z;
+        }
+
+        return this._object3d;
+    }
+
+    set object3d(object3d: ?Object3D) {
+        this._object3d = object3d;
+    }
+}
+
+export class Area {
+    id: number;
+    name: string;
+    area_variants: AreaVariant[];
+
+    constructor(id: number, name: string, area_variants: AreaVariant[]) {
+        if (!is_int(id) || id < 0)
+            throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
+        if (!name) throw new Error('name is required.');
+        if (!area_variants) throw new Error('area_variants is required.');
+
+        this.id = id;
+        this.name = name;
+        this.area_variants = area_variants;
+    }
+}
+
+export class AreaVariant {
+    id: number;
+    area: Area = null;
+    @observable sections: Section[] = [];
+
+    constructor(id: number) {
+        if (!is_int(id) || id < 0)
+            throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
+
+        this.id = id;
+    }
+}
+
+export class Section {
+    id: number;
+    position: [number, number, number];
+    y_axis_rotation: number;
+
+    constructor(
+        id: number,
+        position: [number, number, number],
+        y_axis_rotation: number
+    ) {
+        if (!is_int(id) || id < -1)
+            throw new Error(`Expected id to be an integer greater than or equal to -1, got ${id}.`);
+        if (!position) throw new Error('position is required.');
+        if (position.length !== 3) throw new Error('position should have 3 elements.');
+        if (typeof y_axis_rotation !== 'number') throw new Error('y_axis_rotation is required.');
+
+        this.id = id;
+        this.position = position;
+        this.y_axis_rotation = y_axis_rotation;
     }
 }
 
@@ -56,7 +177,7 @@ export class NpcType {
     }
 }
 
-(function () {
+(function() {
     let id = 1;
 
     NpcType.Unknown = new NpcType(id++, 'Unknown', false);
@@ -193,90 +314,6 @@ export class NpcType {
     NpcType.Goran = new NpcType(id++, 'Goran', true);
     NpcType.PyroGoran = new NpcType(id++, 'Pyro Goran', true);
     NpcType.GoranDetonator = new NpcType(id++, 'Goran Detonator', true);
-    NpcType.SaintMillion = new NpcType(id++, 'Saint Million', true);
+    NpcType.SaintMillion = new NpcType(id++, 'Saint-Million', true);
     NpcType.Shambertin = new NpcType(id++, 'Shambertin', true);
 } ());
-
-export class Npc {
-    @observable type: NpcType;
-    @observable area_id: number;
-    @observable section_id: number;
-    @observable position: [number, number, number];
-
-    constructor(
-        type: NpcType,
-        area_id: number,
-        section_id: number,
-        position: [number, number, number]
-    ) {
-        if (!type) throw new Error('type is required.');
-        if (!is_int(area_id) || area_id < 0)
-            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
-        if (!is_int(section_id) || section_id < 0)
-            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
-        if (!position) throw new Error('position is required.');
-        if (position.length !== 3) throw new Error('position should have 3 elements.');
-
-        this.type = type;
-        this.area_id = area_id;
-        this.section_id = section_id;
-        this.position = position;
-    }
-}
-
-export class Quest {
-    @observable name: string;
-    @observable short_description: string;
-    @observable long_description: string;
-    @observable episode: number;
-    @observable areas: Area[] = [];
-    @observable area_variants: Map<number, number>; // Maps area ids to area variant ids
-    @observable objs: Obj[];
-    @observable npcs: Npc[];
-
-    constructor(
-        name: string,
-        short_description: string,
-        long_description: string,
-        episode: number,
-        area_variants: Map<number, number>,
-        objs: Obj[],
-        npcs: Npc[]
-    ) {
-        if (episode !== 1 && episode !== 2 && episode !== 4) throw new Error('episode should be 1, 2 or 4.');
-        if (!objs) throw new Error('objs is required.');
-        if (!npcs) throw new Error('npcs is required.');
-
-        this.name = name;
-        this.short_description = short_description;
-        this.long_description = long_description;
-        this.episode = episode;
-        this.area_variants = area_variants;
-        this.objs = objs;
-        this.npcs = npcs;
-    }
-}
-
-export class Section {
-    id: number;
-    @observable position: [number, number, number];
-    @observable y_axis_rotation: number;
-
-    constructor(
-        id: number,
-        position: [number, number, number],
-        y_axis_rotation: number
-    ) {
-        if (!is_int(id) || id < -1)
-            throw new Error(`Expected id to be an integer greater than or equal to -1, got ${id}.`);
-        if (!position) throw new Error('position is required.');
-        if (position.length !== 3) throw new Error('position should have 3 elements.');
-        if (typeof y_axis_rotation !== 'number') throw new Error('y_axis_rotation is required.');
-        if (y_axis_rotation < 0 || y_axis_rotation > 65535)
-            throw new Error(`Expected y_axis_rotation to be between 0 and 65535, got ${y_axis_rotation}.`);
-
-        this.id = id;
-        this.position = position;
-        this.y_axis_rotation = y_axis_rotation;
-    }
-}

@@ -15,7 +15,7 @@ export function get_area_sections(
     episode: number,
     area_id: number,
     area_variant: number
-): Promise<Set<Section>> {
+): Promise<Section[]> {
     const sections = sections_cache.get(`${episode}-${area_id}-${area_variant}`);
 
     if (sections) {
@@ -62,7 +62,7 @@ function get_area_sections_and_render_geometry(
     episode: number,
     area_id: number,
     area_variant: number
-): Promise<{ sections: Set<Section>, object_3d: Object3D }> {
+): Promise<{ sections: Section[], object_3d: Object3D }> {
     const promise = get_area_render_data(
         episode, area_id, area_variant).then(parse_n_rel);
 

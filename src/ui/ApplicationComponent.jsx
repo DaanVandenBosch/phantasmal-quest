@@ -37,8 +37,8 @@ export class ApplicationComponent extends React.Component {
 
     render() {
         const quest = application_state.current_quest;
-        const area_ids = quest ? [...quest.areas].map(a => a.id) : null;
-        const area = application_state.current_area
+        const areas = quest ? [...quest.area_variants].map(a => a.area) : null;
+        const area = application_state.current_area;
         const area_id = area && area.id;
 
         return (
@@ -50,13 +50,13 @@ export class ApplicationComponent extends React.Component {
                             type="file"
                             accept=".qst"
                             onChange={this._on_file_change} />
-                        {area_ids ? (
+                        {areas ? (
                             <select
                                 style={this._area_select}
                                 onChange={this._on_area_select_change}
                                 defaultValue={area_id}>
-                                {area_ids.map(area_id =>
-                                    <option key={area_id} value={area_id}>Area {area_id}</option>)}
+                                {areas.map(area =>
+                                    <option key={area.id} value={area.id}>{area.name}</option>)}
                             </select>) : null}
                     </div>
                 </div>
