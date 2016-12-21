@@ -1,5 +1,4 @@
 // @flow
-import { List } from 'immutable';
 import { ArrayBufferCursor } from './ArrayBufferCursor';
 
 export function parse_dat(cursor: ArrayBufferCursor) {
@@ -102,5 +101,5 @@ export function parse_dat(cursor: ArrayBufferCursor) {
         offset += total_size;
     }
 
-    return { objs: new List(objs), npcs: new List(npcs) };
+    return { objs: objs, npcs: npcs };
 }

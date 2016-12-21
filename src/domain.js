@@ -1,40 +1,58 @@
 // @flow
-import { Record, List, OrderedMap } from 'immutable';
+import { observable } from 'mobx';
+import { is_int } from './utils';
 
-export class Obj extends Record({
-    area_id: 0,
-    section_id: 0,
-    position: [0, 0, 0]
-}) {
-    area_id: number;
-    section_id: number;
-    position: [number, number, number];
+export class Area {
+    id: number;
+    @observable sections: Section[];
+
+    constructor(id: number, sections: Section[]) {
+        if (!is_int(id) || id < 0)
+            throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
+        if (!sections) throw new Error('sections is required.');
+
+        this.id = id;
+        this.sections = sections;
+    }
+}
+
+export class Obj {
+    @observable area_id: number;
+    @observable section_id: number;
+    @observable position: [number, number, number];
 
     constructor(
         area_id: number,
         section_id: number,
         position: [number, number, number]
     ) {
+        if (!is_int(area_id) || area_id < 0)
+            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
+        if (!is_int(section_id) || section_id < 0)
+            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
         if (!position) throw new Error('position is required.');
         if (position.length !== 3) throw new Error('position should have 3 elements.');
 
-        super({ area_id, section_id, position });
+        this.area_id = area_id;
+        this.section_id = section_id;
+        this.position = position;
     }
 }
 
-export class NpcType extends Record({
-    id: null,
-    name: '',
-    enemy: false
-}) {
-    id: number | null;
+export class NpcType {
+    id: number;
     name: string;
     enemy: boolean;
 
     constructor(id: number, name: string, enemy: boolean) {
+        if (!is_int(id) || id < 1)
+            throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
         if (!name) throw new Error('name is required.');
+        if (typeof enemy !== 'boolean') throw new Error('enemy is required.');
 
-        super({ id, name, enemy });
+        this.id = id;
+        this.name = name;
+        this.enemy = enemy;
     }
 }
 
@@ -179,16 +197,11 @@ export class NpcType extends Record({
     NpcType.Shambertin = new NpcType(id++, 'Shambertin', true);
 } ());
 
-export class Npc extends Record({
-    type: NpcType.Unknown,
-    area_id: 0,
-    section_id: 0,
-    position: [0, 0, 0]
-}) {
-    type: NpcType;
-    area_id: number;
-    section_id: number;
-    position: [number, number, number];
+export class Npc {
+    @observable type: NpcType;
+    @observable area_id: number;
+    @observable section_id: number;
+    @observable position: [number, number, number];
 
     constructor(
         type: NpcType,
@@ -197,25 +210,73 @@ export class Npc extends Record({
         position: [number, number, number]
     ) {
         if (!type) throw new Error('type is required.');
+        if (!is_int(area_id) || area_id < 0)
+            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
+        if (!is_int(section_id) || section_id < 0)
+            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
         if (!position) throw new Error('position is required.');
         if (position.length !== 3) throw new Error('position should have 3 elements.');
 
-        super({ type, area_id, section_id, position });
+        this.type = type;
+        this.area_id = area_id;
+        this.section_id = section_id;
+        this.position = position;
     }
 }
 
-export const Quest = Record({
-    name: null,
-    short_description: null,
-    long_description: null,
-    episode: 1,
-    areas: OrderedMap(),
-    objs: List(),
-    npcs: List()
-});
+export class Quest {
+    @observable name: string;
+    @observable short_description: string;
+    @observable long_description: string;
+    @observable episode: number;
+    @observable areas: Area[] = [];
+    @observable area_variants: Map<number, number>; // Maps area ids to area variant ids
+    @observable objs: Obj[];
+    @observable npcs: Npc[];
 
-export const Section = Record({
-    id: null,
-    position: [0, 0, 0],
-    y_axis_rotation: 0
-});
+    constructor(
+        name: string,
+        short_description: string,
+        long_description: string,
+        episode: number,
+        area_variants: Map<number, number>,
+        objs: Obj[],
+        npcs: Npc[]
+    ) {
+        if (episode !== 1 && episode !== 2 && episode !== 4) throw new Error('episode should be 1, 2 or 4.');
+        if (!objs) throw new Error('objs is required.');
+        if (!npcs) throw new Error('npcs is required.');
+
+        this.name = name;
+        this.short_description = short_description;
+        this.long_description = long_description;
+        this.episode = episode;
+        this.area_variants = area_variants;
+        this.objs = objs;
+        this.npcs = npcs;
+    }
+}
+
+export class Section {
+    id: number;
+    @observable position: [number, number, number];
+    @observable y_axis_rotation: number;
+
+    constructor(
+        id: number,
+        position: [number, number, number],
+        y_axis_rotation: number
+    ) {
+        if (!is_int(id) || id < -1)
+            throw new Error(`Expected id to be an integer greater than or equal to -1, got ${id}.`);
+        if (!position) throw new Error('position is required.');
+        if (position.length !== 3) throw new Error('position should have 3 elements.');
+        if (typeof y_axis_rotation !== 'number') throw new Error('y_axis_rotation is required.');
+        if (y_axis_rotation < 0 || y_axis_rotation > 65535)
+            throw new Error(`Expected y_axis_rotation to be between 0 and 65535, got ${y_axis_rotation}.`);
+
+        this.id = id;
+        this.position = position;
+        this.y_axis_rotation = y_axis_rotation;
+    }
+}

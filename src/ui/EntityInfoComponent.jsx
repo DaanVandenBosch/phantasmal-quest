@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { observer } from 'mobx-react';
 import { Npc } from '../domain';
 
 const container_style = {
@@ -13,7 +13,7 @@ const table_style = {
     borderCollapse: 'collapse'
 };
 
-function EntityInfoComponentRaw({entity}: { entity: Npc }) {
+export const EntityInfoComponent = observer(({entity}: { entity: Npc }) => {
     if (entity) {
         return (
             <div style={container_style}>
@@ -32,8 +32,4 @@ function EntityInfoComponentRaw({entity}: { entity: Npc }) {
     } else {
         return <div style={container_style} />;
     }
-}
-
-export const EntityInfoComponent = connect(
-    state => ({ entity: state.get('selected_entity') })
-)(EntityInfoComponentRaw);
+});

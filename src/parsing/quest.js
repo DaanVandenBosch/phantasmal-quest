@@ -1,6 +1,5 @@
 // @flow
 /*eslint default-case: ["off"]*/
-import { List, OrderedMap } from 'immutable';
 import { ArrayBufferCursor } from './ArrayBufferCursor';
 import { parse_qst } from './qst';
 import { Npc, NpcType, Obj, Quest } from '../domain';
@@ -13,14 +12,14 @@ import { Npc, NpcType, Obj, Quest } from '../domain';
 export function parse_quest(cursor: ArrayBufferCursor): Quest {
     const {dat, bin} = parse_qst(cursor);
     let episode = 1;
-    let areas = new OrderedMap();
+    let area_variants = new Map();
 
     if (bin.function_offsets.length) {
         const func_0_ops = get_func_operations(bin.instructions, bin.function_offsets[0]);
 
         if (func_0_ops) {
             episode = get_episode(func_0_ops);
-            areas = get_areas(func_0_ops);
+            area_variants = get_area_variants(func_0_ops);
         } else {
             console.warn(`Function 0 offset ${bin.function_offsets[0]} is invalid.`);
         }
@@ -28,15 +27,15 @@ export function parse_quest(cursor: ArrayBufferCursor): Quest {
         console.warn('File contains no functions.');
     }
 
-    return new Quest({
-        name: bin.quest_name,
-        short_description: bin.short_description,
-        long_description: bin.long_description,
+    return new Quest(
+        bin.quest_name,
+        bin.short_description,
+        bin.long_description,
         episode,
-        areas,
-        objs: parse_obj_data(episode, dat.objs),
-        npcs: parse_npc_data(episode, dat.npcs)
-    });
+        area_variants,
+        parse_obj_data(episode, dat.objs),
+        parse_npc_data(episode, dat.npcs)
+    );
 }
 
 /**
@@ -58,15 +57,16 @@ function get_episode(func_0_ops): number {
     }
 }
 
-function get_areas(func_0_ops): OrderedMap<number, number> {
-    const areas = [];
+function get_area_variants(func_0_ops): Map<number, number> {
+    const area_variants = [];
     const bb_maps = func_0_ops.filter(op => op.mnemonic === 'BB_Map_Designate');
 
     for (const bb_map of bb_maps) {
-        areas.push([bb_map.args[0], bb_map.args[2]]);
+        area_variants.push([bb_map.args[0], bb_map.args[2]]);
     }
 
-    return new OrderedMap(areas).sortBy((_, id) => id);
+    // Sort by id.
+    return new Map(area_variants.sort((a, b) => a[0] - b[0]));
 }
 
 function get_func_operations(operations: any[], func_offset: number) {
@@ -94,7 +94,7 @@ function get_func_operations(operations: any[], func_offset: number) {
     return func_found ? func_ops : null;
 }
 
-function parse_obj_data(episode: number, objs: List<any>): List<Obj> {
+function parse_obj_data(episode: number, objs: any[]): Obj[] {
     return objs.map(
         obj_data => new Obj(
             obj_data.area_id,
@@ -104,7 +104,7 @@ function parse_obj_data(episode: number, objs: List<any>): List<Obj> {
     );
 }
 
-function parse_npc_data(episode: number, npcs: List<any>): List<Npc> {
+function parse_npc_data(episode: number, npcs: any[]): Npc[] {
     return npcs.map(
         npc_data => new Npc(
             get_npc_type(episode, npc_data),
@@ -116,7 +116,7 @@ function parse_npc_data(episode: number, npcs: List<any>): List<Npc> {
 }
 
 function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcType {
-    switch (`${type_id}, ${skin}, ${episode}`) {
+    switch (`${type_id}, ${skin % 2}, ${episode}`) {
         case `${0x040}, 0, 1`: return NpcType.Hildebear;
         case `${0x040}, 0, 2`: return NpcType.Hildebear2;
         case `${0x040}, 1, 1`: return NpcType.Hildeblue;
@@ -131,37 +131,21 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x043}, 0, 2`: return NpcType.SavageWolf2;
         case `${0x043}, 1, 1`: return NpcType.BarbarousWolf;
         case `${0x043}, 1, 2`: return NpcType.BarbarousWolf2;
-        case `${0x044}, 0, 1`: return NpcType.Booma;
-        case `${0x044}, 1, 1`: return NpcType.Gobooma;
-        case `${0x044}, 2, 1`: return NpcType.Gigobooma;
 
         case `${0x061}, 0, 1`: return area_id > 15 ? NpcType.DelLily : NpcType.PoisonLily;
         case `${0x061}, 0, 2`: return area_id > 15 ? NpcType.DelLily : NpcType.PoisonLily2;
         case `${0x061}, 1, 1`: return area_id > 15 ? NpcType.DelLily : NpcType.NarLily;
         case `${0x061}, 1, 2`: return area_id > 15 ? NpcType.DelLily : NpcType.NarLily2;
-        case `${0x063}, 0, 1`: return NpcType.EvilShark;
-        case `${0x063}, 1, 1`: return NpcType.PalShark;
-        case `${0x063}, 2, 1`: return NpcType.GuilShark;
 
         case `${0x080}, 0, 1`: return NpcType.Dubchic;
         case `${0x080}, 0, 2`: return NpcType.Dubchic2;
         case `${0x080}, 1, 1`: return NpcType.Gilchic;
         case `${0x080}, 1, 2`: return NpcType.Gilchic2;
 
-        case `${0x0A6}, 0, 1`: return NpcType.Dimenian;
-        case `${0x0A6}, 0, 2`: return NpcType.Dimenian2;
-        case `${0x0A6}, 1, 1`: return NpcType.LaDimenian;
-        case `${0x0A6}, 1, 2`: return NpcType.LaDimenian2;
-        case `${0x0A6}, 2, 1`: return NpcType.SoDimenian;
-        case `${0x0A6}, 2, 2`: return NpcType.SoDimenian2;
-
         case `${0x0D4}, 0, 2`: return NpcType.SinowBerill;
         case `${0x0D4}, 1, 2`: return NpcType.SinowSpigell;
         case `${0x0D5}, 0, 2`: return NpcType.Merillia;
         case `${0x0D5}, 1, 2`: return NpcType.Meriltas;
-        case `${0x0D6}, 0, 2`: return NpcType.Mericarol;
-        case `${0x0D6}, 1, 2`: return NpcType.Mericus;
-        case `${0x0D6}, 2, 2`: return NpcType.Merikle;
         case `${0x0D7}, 0, 2`: return NpcType.UlGibbon;
         case `${0x0D7}, 1, 2`: return NpcType.ZolGibbon;
 
@@ -174,18 +158,40 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x112}, 1, 4`: return NpcType.MerissaAA;
         case `${0x114}, 0, 4`: return NpcType.Zu;
         case `${0x114}, 1, 4`: return NpcType.Pazuzu;
-        case `${0x115}, 0, 4`: return NpcType.Boota;
-        case `${0x115}, 1, 4`: return NpcType.ZaBoota;
-        case `${0x115}, 2, 4`: return NpcType.BaBoota;
         case `${0x116}, 0, 4`: return NpcType.Dorphon;
         case `${0x116}, 1, 4`: return NpcType.DorphonEclair;
-        case `${0x117}, 0, 4`: return NpcType.Goran;
-        case `${0x117}, 1, 4`: return NpcType.PyroGoran;
-        case `${0x117}, 2, 4`: return NpcType.GoranDetonator;
         case `${0x119}, 0, 4`: return NpcType.SaintMillion;
         case `${0x119}, 1, 4`: return NpcType.Shambertin;
     }
-    
+
+    switch (`${type_id}, ${skin % 3}, ${episode}`) {
+        case `${0x044}, 0, 1`: return NpcType.Booma;
+        case `${0x044}, 1, 1`: return NpcType.Gobooma;
+        case `${0x044}, 2, 1`: return NpcType.Gigobooma;
+
+        case `${0x063}, 0, 1`: return NpcType.EvilShark;
+        case `${0x063}, 1, 1`: return NpcType.PalShark;
+        case `${0x063}, 2, 1`: return NpcType.GuilShark;
+
+        case `${0x0A6}, 0, 1`: return NpcType.Dimenian;
+        case `${0x0A6}, 0, 2`: return NpcType.Dimenian2;
+        case `${0x0A6}, 1, 1`: return NpcType.LaDimenian;
+        case `${0x0A6}, 1, 2`: return NpcType.LaDimenian2;
+        case `${0x0A6}, 2, 1`: return NpcType.SoDimenian;
+        case `${0x0A6}, 2, 2`: return NpcType.SoDimenian2;
+
+        case `${0x0D6}, 0, 2`: return NpcType.Mericarol;
+        case `${0x0D6}, 1, 2`: return NpcType.Mericus;
+        case `${0x0D6}, 2, 2`: return NpcType.Merikle;
+
+        case `${0x115}, 0, 4`: return NpcType.Boota;
+        case `${0x115}, 1, 4`: return NpcType.ZaBoota;
+        case `${0x115}, 2, 4`: return NpcType.BaBoota;
+        case `${0x117}, 0, 4`: return NpcType.Goran;
+        case `${0x117}, 1, 4`: return NpcType.PyroGoran;
+        case `${0x117}, 2, 4`: return NpcType.GoranDetonator;
+    }
+
     switch (`${type_id}, ${episode}`) {
         case `${0x042}, 1`: return NpcType.Monest;
         case `${0x042}, 2`: return NpcType.Monest2;
@@ -196,7 +202,7 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x064}, 1`: return regular ? NpcType.PofuillySlime : NpcType.PouillySlime;
         case `${0x065}, 1`: return NpcType.PanArms;
         case `${0x065}, 2`: return NpcType.PanArms2;
-        
+
         case `${0x081}, 1`: return NpcType.Garanz;
         case `${0x081}, 2`: return NpcType.Garanz2;
         case `${0x082}, 1`: return regular ? NpcType.SinowBeat : NpcType.SinowGold;
@@ -224,23 +230,23 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x0CA}, 1`: return NpcType.OlgaFlow;
         case `${0x0CB}, 1`: return NpcType.BarbaRay;
         case `${0x0CC}, 1`: return NpcType.GolDragon;
-        
+
         case `${0x0D8}, 2`: return NpcType.Gibbles;
         case `${0x0D9}, 2`: return NpcType.Gee;
         case `${0x0DA}, 2`: return NpcType.GiGue;
-        
+
         case `${0x0DB}, 2`: return NpcType.Deldepth;
         case `${0x0DC}, 2`: return NpcType.Delbiter;
         case `${0x0DE}, 2`: return NpcType.Morfos;
         case `${0x0DF}, 2`: return NpcType.Recobox;
         case `${0x0E1}, 2`: return NpcType.IllGill;
-        
+
         case `${0x110}, 4`: return NpcType.Astark;
         case `${0x111}, 4`: return regular ? NpcType.SatelliteLizard : NpcType.Yowie;
         case `${0x113}, 4`: return NpcType.Girtablulu;
     }
 
-    switch(type_id) {
+    switch (type_id) {
         case 0x004: return NpcType.FemaleFat;
         case 0x005: return NpcType.FemaleMacho;
         case 0x007: return NpcType.FemaleTall;

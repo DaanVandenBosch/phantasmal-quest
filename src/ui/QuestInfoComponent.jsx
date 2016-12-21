@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { observer } from 'mobx-react';
 import { NpcType, Quest } from '../domain';
 
 const container_style = {
@@ -22,17 +22,20 @@ const npc_counts_container_style = {
     overflow: 'auto'
 };
 
-function QuestInfoComponentRaw({quest}: { quest: ?Quest }) {
+export const QuestInfoComponent = observer(({quest}: { quest: ?Quest }) => {
     if (quest) {
         const episode = quest.episode === 4 ? 'IV' : (quest.episode === 2 ? 'II' : 'I');
-        const npc_counts: [NpcType, number][] = quest.npcs
-            .groupBy(npc => npc.type)
-            .toList()
-            .sortBy(npcs => npcs.first().type.id)
-            .map(npcs => [npcs.first().type, npcs.size])
-            .toJS();
-        const extra_canadines = npc_counts.filter(
-            ([npc_type]) => npc_type === NpcType.Canane).length * 8;
+        let npc_counts = new Map();
+
+        for (const npc of quest.npcs) {
+            const val = npc_counts.get(npc.type) || 0;
+            npc_counts.set(npc.type, val + 1);
+        }
+
+        const extra_canadines = (npc_counts.get(NpcType.Canane) || 0) * 8;
+
+        // Sort by type ID.
+        npc_counts = [...npc_counts].sort((a, b) => a[0].id - b[0].id);
 
         const npc_count_rows = npc_counts.map(([npc_type, count]) => {
             const extra = npc_type === NpcType.Canadine ? extra_canadines : 0;
@@ -77,8 +80,4 @@ function QuestInfoComponentRaw({quest}: { quest: ?Quest }) {
     } else {
         return <div style={container_style} />;
     }
-}
-
-export const QuestInfoComponent = connect(
-    state => ({ quest: state.get('current_quest') })
-)(QuestInfoComponentRaw);
+});

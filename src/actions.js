@@ -1,61 +1,46 @@
 // @flow
 import { ArrayBufferCursor } from './parsing/ArrayBufferCursor';
+import { Area } from './domain';
+import { application_state } from './store';
 import { parse_quest } from './parsing/quest';
 import { get_area_sections } from './area-data';
 
-/*
- * Action types
- * 
- * Action types are always represented as simple strings.
- * 
- */
-
-export const AREA_LOADED = 'AREA_LOADED';
-export const CURRENT_AREA_ID_CHANGED = 'CURRENT_AREA_ID_CHANGED';
-export const ENTITY_SELECTED = 'ENTITY_SELECTED';
-export const NEW_FILE = 'NEW_FILE';
-export const NEW_QUEST = 'NEW_QUEST';
-
-/*
- * Action creators
- * 
- * All action creators return either actions or thunks expecting a dispatch function.
- * Actions are in flux standard action format.
- * 
- */
-
-export function area_loaded(area: any) {
-    return { type: AREA_LOADED, payload: area };
-}
-
 export function entity_selected(entity: any) {
-    return { type: ENTITY_SELECTED, payload: entity };
+    application_state.selected_entity = entity;
 }
 
-export function new_quest(quest: any) {
-    return { type: NEW_QUEST, payload: quest };
-}
+export function load_file(file: File) {
+    const reader = new FileReader();
 
-export function new_file(file: File) {
-    return (dispatch: any) => {
-        dispatch({ type: NEW_FILE, payload: file });
+    reader.addEventListener('loadend', () => {
+        const quest = parse_quest(new ArrayBufferCursor(reader.result, true));
+        application_state.current_area = null;
+        application_state.current_quest = quest;
 
-        const reader = new FileReader();
-        reader.addEventListener('loadend', () => {
-            if (file.name.endsWith('.qst')) {
-                const quest = parse_quest(new ArrayBufferCursor(reader.result, true));
-                dispatch(new_quest(quest));
+        const area_promises = [...quest.area_variants.entries()].map(([id, variant]) => {
+            return get_area_sections(quest.episode, id, variant).then(
+                sections => new Area(id, sections));
+        });
 
-                for (const [id, variant] of quest.areas.entries()) {
-                    get_area_sections(quest.episode, id, variant).then(sections =>
-                        dispatch(area_loaded({ id, sections })));
-                }
+        Promise.all(area_promises).then(areas => {
+            for (const area of areas) {
+                quest.areas.push(area);
+            }
+
+            if (areas.length) {
+                application_state.current_area = areas[0];
             }
         });
-        reader.readAsArrayBuffer(file);
-    }
+    });
+
+    reader.readAsArrayBuffer(file);
 }
 
-export function current_area_id_changed(area_id: number) {
-    return { type: CURRENT_AREA_ID_CHANGED, payload: area_id };
+export function current_area_id_changed(area_id: ?number) {
+    if (area_id === null) {
+        application_state.current_area = null;
+    } else if (application_state.current_quest) {
+        application_state.current_area = application_state.current_quest.areas.find(
+            area => area.id === area_id) || null;
+    }
 }

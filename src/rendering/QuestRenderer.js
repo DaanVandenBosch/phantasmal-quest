@@ -1,5 +1,4 @@
 // @flow
-import { is, Map } from 'immutable';
 import * as THREE from 'three';
 import {
     Color,
@@ -30,8 +29,8 @@ export class QuestRenderer {
     _scene = new Scene();
     _quest: ?Quest = null;
     _area = null;
-    _objs = new Map();
-    _npcs = new Map();
+    _objs: Map<number, Obj[]> = new Map(); // Objs grouped by area id
+    _npcs: Map<number, Npc[]> = new Map(); // Npcs grouped by area id
     _collision_geometry = null;
     _obj_geometry = null;
     _npc_geometry = null;
@@ -66,20 +65,30 @@ export class QuestRenderer {
     set_quest_and_area(quest: Quest, area: any) {
         let update = false;
 
-        if (!is(this._quest, quest)) {
+        if (this._quest !== quest) {
             this._quest = quest;
-            this._objs = quest.objs
-                .groupBy(obj => obj.area_id)
-                .sortBy(obj => obj.area_id)
-                .toOrderedMap();
-            this._npcs = quest.npcs
-                .groupBy(npc => npc.area_id)
-                .sortBy(npc => npc.area_id)
-                .toOrderedMap();
+
+            this._objs.clear();
+            this._npcs.clear();
+
+            if (quest) {
+                for (const obj of quest.objs) {
+                    const array = this._objs.get(obj.area_id) || [];
+                    array.push(obj);
+                    this._objs.set(obj.area_id, array);
+                }
+
+                for (const npc of quest.npcs) {
+                    const array = this._npcs.get(npc.area_id) || [];
+                    array.push(npc);
+                    this._npcs.set(npc.area_id, array);
+                }
+            }
+
             update = true;
         }
 
-        if (!is(this._area, area)) {
+        if (this._area !== area) {
             this._area = area;
             update = true;
         }
@@ -97,7 +106,7 @@ export class QuestRenderer {
         if (this._quest && this._area) {
             const episode = this._quest.episode;
             const area_id = this._area.id;
-            const variant = this._quest.areas.get(this._area.id) || 0;
+            const variant = this._quest.area_variants.get(this._area.id) || 0;
 
             get_area_collision_geometry(episode, area_id, variant).then(geometry => {
                 if (this._quest && this._area) {
@@ -146,18 +155,21 @@ export class QuestRenderer {
     _selected_data = null;
 
     _on_mouse_down = (e: MouseEvent) => {
+        const old_selected_data = this._selected_data;
         const data = this._pick_npc(
             this._pointer_pos_to_device_coords(e));
 
+        // Did we pick a different object than the previously hovered over 3D object?
         if (this._hovered_data && (!data || data.object !== this._hovered_data.object)) {
             this._hovered_data.object.material.color.set(0xff0000);
             this._hovered_data.object.material.transparent = true;
         }
 
+        // Did we pick a different object than the previously selected 3D object?
         if (this._selected_data && (!data || data.object !== this._selected_data.object)) {
-             this._selected_data.object.material.color.set(0xff0000);
-             this._selected_data.object.material.transparent = true;
-             this._selected_data.manipulating = false;
+            this._selected_data.object.material.color.set(0xff0000);
+            this._selected_data.object.material.transparent = true;
+            this._selected_data.manipulating = false;
         }
 
         if (data) {
@@ -169,10 +181,17 @@ export class QuestRenderer {
             this._selected_data = data;
             this._controls.enabled = false;
         } else {
+            // User clicked on terrain or outside of area.
+            this._hovered_data = null;
+            this._selected_data = null;
             this._controls.enabled = true;
         }
 
-        if (this._on_select) {
+        const selection_changed = old_selected_data && data
+            ? old_selected_data.object !== data.object
+            : old_selected_data !== data;
+
+        if (selection_changed && this._on_select) {
             this._on_select(data && data.object.entity);
         }
     }

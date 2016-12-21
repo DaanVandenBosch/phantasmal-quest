@@ -1,13 +1,13 @@
 // @flow
-import { OrderedSet } from 'immutable';
 import { Object3D } from 'three';
+import { Section } from 'domain';
 import { get_area_render_data, get_area_collision_data } from './assets';
 import { parse_c_rel, parse_n_rel } from './parsing/geometry';
 
 /*
  * Caches
  */
-const sections_cache: Map<string, Promise<OrderedSet<*>>> = new Map();
+const sections_cache: Map<string, Promise<Section[]>> = new Map();
 const render_geometry_cache: Map<string, Promise<Object3D>> = new Map();
 const collision_geometry_cache: Map<string, Promise<Object3D>> = new Map();
 
@@ -15,7 +15,7 @@ export function get_area_sections(
     episode: number,
     area_id: number,
     area_variant: number
-): Promise<OrderedSet<*>> {
+): Promise<Set<Section>> {
     const sections = sections_cache.get(`${episode}-${area_id}-${area_variant}`);
 
     if (sections) {
@@ -62,7 +62,7 @@ function get_area_sections_and_render_geometry(
     episode: number,
     area_id: number,
     area_variant: number
-): Promise<{ sections: OrderedSet<*>, object_3d: Object3D }> {
+): Promise<{ sections: Set<Section>, object_3d: Object3D }> {
     const promise = get_area_render_data(
         episode, area_id, area_variant).then(parse_n_rel);
 

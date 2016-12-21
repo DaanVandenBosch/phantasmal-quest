@@ -1,21 +1,20 @@
 // @flow
-import { List, OrderedSet } from 'immutable';
 import { CylinderGeometry, Mesh, MeshLambertMaterial, Object3D } from 'three';
-import { Npc } from '../domain';
+import { Npc, Section } from '../domain';
 
-export function create_obj_geometry(objs: List<Obj>, sections: OrderedSet<any>): Object3D {
+export function create_obj_geometry(objs: Obj[], sections: Section[]): Object3D {
     return create_geometry(objs, sections, 0xffff00, 'Object');
 }
 
-export function create_npc_geometry(npcs: List<Npc>, sections: OrderedSet<any>): Object3D {
+export function create_npc_geometry(npcs: Npc[], sections: Section[]): Object3D {
     return create_geometry(npcs, sections, 0xff0000, 'NPC');
 }
 
 type Entity = { position: [number, number, number], section_id: number };
 
 function create_geometry(
-    entities: List<Entity>,
-    sections: OrderedSet<any>,
+    entities: Entity[],
+    sections: Section[],
     color: number,
     type: string
 ): Object3D {

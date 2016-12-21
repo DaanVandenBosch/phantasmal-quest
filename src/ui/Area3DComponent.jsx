@@ -1,10 +1,11 @@
 // @flow
 import React from 'react';
-import { connect } from 'react-redux';
+import { observer } from 'mobx-react';
 import { entity_selected } from '../actions';
 import { QuestRenderer } from '../rendering/QuestRenderer';
 
-class Area3DComponentRaw extends React.Component {
+@observer
+export class Area3DComponent extends React.Component {
     _renderer = new QuestRenderer({
         on_select: this._on_select.bind(this)
     });
@@ -27,13 +28,6 @@ class Area3DComponentRaw extends React.Component {
     }
 
     _on_select(entity) {
-        this.props.dispatch(entity_selected(entity));
+        entity_selected(entity);
     }
 }
-
-export const Area3DComponent = connect(
-    state => ({
-        quest: state.get('current_quest'),
-        area: state.get('areas').get(state.get('current_area_id'))
-    })
-)(Area3DComponentRaw);

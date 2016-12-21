@@ -1,5 +1,4 @@
 // @flow
-import { OrderedSet } from 'immutable';
 import {
     BufferAttribute,
     BufferGeometry,
@@ -13,6 +12,7 @@ import {
     TriangleStripDrawMode,
     Vector3
 } from 'three';
+import { Section } from '../domain';
 
 export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
     const dv = new DataView(array_buffer);
@@ -90,7 +90,7 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
 
 export function parse_n_rel(
     array_buffer: ArrayBuffer
-): { sections: OrderedSet<*>, object_3d: Object3D } {
+): { sections: Section[], object_3d: Object3D } {
     const dv = new DataView(array_buffer);
     const sections = new Map();
     const index_lists_list = [];
@@ -115,11 +115,10 @@ export function parse_n_rel(
         const sin_section_rotation = Math.sin(section_rotation);
         const cos_section_rotation = Math.cos(section_rotation);
 
-        sections.set(section_id, {
-            id: section_id,
-            position: [section_x, section_y, section_z],
-            y_axis_rotation: section_rotation
-        });
+        sections.set(section_id, new Section(
+            section_id,
+            [section_x, section_y, section_z],
+            section_rotation));
 
         const simple_geometry_offset_table_offset = dv.getUint32(i + 32, true);
         // const complex_geometry_offset_table_offset = dv.getUint32(i + 36, true);
@@ -335,7 +334,7 @@ export function parse_n_rel(
     }
 
     return {
-        sections: new OrderedSet(sections.values()).sortBy(s => s.id),
+        sections: [...sections.values()].sort((a, b) => a.id - b.id),
         object_3d: object
     };
 }
