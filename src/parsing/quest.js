@@ -68,10 +68,13 @@ function get_area_variants(episode, func_0_ops): AreaVariant[] {
         area_variants.set(area_id, variant_id);
     }
 
-    // Sort by area id and then variant id.
-    const sorted = [...area_variants].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-    return sorted.map(([area_id, variant_id]) =>
-        area_store.get_variant(episode, area_id, variant_id));
+    // Sort by area order and then variant id.
+    return (
+        [...area_variants]
+            .map(([area_id, variant_id]) =>
+                area_store.get_variant(episode, area_id, variant_id))
+            .sort((a, b) => a.area.order - b.area.order || a.id - b.id)
+    );
 }
 
 function get_func_operations(operations: any[], func_offset: number) {

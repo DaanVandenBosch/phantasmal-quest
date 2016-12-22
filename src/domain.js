@@ -111,9 +111,10 @@ export class QuestNpc implements VisibleQuestEntity {
 export class Area {
     id: number;
     name: string;
+    order: number;
     area_variants: AreaVariant[];
 
-    constructor(id: number, name: string, area_variants: AreaVariant[]) {
+    constructor(id: number, name: string, order: number, area_variants: AreaVariant[]) {
         if (!is_int(id) || id < 0)
             throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
         if (!name) throw new Error('name is required.');
@@ -121,6 +122,7 @@ export class Area {
 
         this.id = id;
         this.name = name;
+        this.order = order;
         this.area_variants = area_variants;
     }
 }
