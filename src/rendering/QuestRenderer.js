@@ -12,8 +12,16 @@ import {
     WebGLRenderer
 } from 'three';
 import OrbitControlsCreator from 'three-orbit-controls';
-import { Area, Quest } from '../domain';
+import { Area, Quest, VisibleQuestEntity, QuestObject, QuestNpc } from '../domain';
 import { get_area_collision_geometry } from '../area-data';
+import {
+    OBJECT_COLOR,
+    OBJECT_HOVER_COLOR,
+    OBJECT_SELECTED_COLOR,
+    NPC_COLOR,
+    NPC_HOVER_COLOR,
+    NPC_SELECTED_COLOR
+} from './entities';
 
 const OrbitControls = OrbitControlsCreator(THREE);
 
@@ -30,8 +38,8 @@ export class QuestRenderer {
     _quest: ?Quest = null;
     _quest_entities_loaded = false;
     _area: Area = null;
-    _objs: Map<number, Obj[]> = new Map(); // Objs grouped by area id
-    _npcs: Map<number, Npc[]> = new Map(); // Npcs grouped by area id
+    _objs: Map<number, QuestObject[]> = new Map(); // Objs grouped by area id
+    _npcs: Map<number, QuestNpc[]> = new Map(); // Npcs grouped by area id
     _collision_geometry = null;
     _obj_geometry = new Object3D();
     _npc_geometry = new Object3D();
@@ -180,25 +188,27 @@ export class QuestRenderer {
 
     _on_mouse_down = (e: MouseEvent) => {
         const old_selected_data = this._selected_data;
-        const data = this._pick_npc(
+        const data = this._pick_entity(
             this._pointer_pos_to_device_coords(e));
 
         // Did we pick a different object than the previously hovered over 3D object?
         if (this._hovered_data && (!data || data.object !== this._hovered_data.object)) {
-            this._hovered_data.object.material.color.set(0xff0000);
+            this._hovered_data.object.material.color.set(
+                this._get_color(this._hovered_data.entity, 'normal'));
             this._hovered_data.object.material.transparent = true;
         }
 
         // Did we pick a different object than the previously selected 3D object?
         if (this._selected_data && (!data || data.object !== this._selected_data.object)) {
-            this._selected_data.object.material.color.set(0xff0000);
+            this._selected_data.object.material.color.set(
+                this._get_color(this._selected_data.entity, 'normal'));
             this._selected_data.object.material.transparent = true;
             this._selected_data.manipulating = false;
         }
 
         if (data) {
             // User selected an entity.
-            data.object.material.color.set(0xff0060);
+            data.object.material.color.set(this._get_color(data.entity, 'selected'));
             data.object.material.transparent = false;
             data.manipulating = true;
             this._hovered_data = data;
@@ -216,7 +226,7 @@ export class QuestRenderer {
             : old_selected_data !== data;
 
         if (selection_changed && this._on_select) {
-            this._on_select(data && data.object.entity);
+            this._on_select(data && data.entity);
         }
     }
 
@@ -237,20 +247,21 @@ export class QuestRenderer {
             const terrain = this._pick_terrain(pointer_pos, data);
 
             if (terrain) {
-                data.object.entity.position = {
+                data.entity.position = {
                     x: terrain.point.x,
                     y: terrain.point.y + data.drag_y,
-                    z: terrain.point.z,
+                    z: terrain.point.z
                 };
             }
         } else {
             // User is hovering.
             const old_data = this._hovered_data;
-            const data = this._pick_npc(pointer_pos);
+            const data = this._pick_entity(pointer_pos);
 
             if (old_data && (!data || data.object !== old_data.object)) {
                 if (!this._selected_data || old_data.object !== this._selected_data.object) {
-                    old_data.object.material.color.set(0xff0000);
+                    old_data.object.material.color.set(
+                        this._get_color(old_data.entity, 'normal'));
                     old_data.object.material.transparent = true;
                 }
 
@@ -259,7 +270,8 @@ export class QuestRenderer {
 
             if (data && (!old_data || data.object !== old_data.object)) {
                 if (!this._selected_data || data.object !== this._selected_data.object) {
-                    data.object.material.color.set(0xff3060);
+                    data.object.material.color.set(
+                        this._get_color(data.entity, 'hover'));
                     data.object.material.transparent = true;
                 }
 
@@ -278,39 +290,41 @@ export class QuestRenderer {
     /**
      * @param pointer_pos - pointer coordinates in normalized device space
      */
-    _pick_npc(pointer_pos: Vector2): * {
-        if (!this._npc_geometry) {
-            return null;
-        }
-
-        // Find the nearest NPC under the pointer.
+    _pick_entity(pointer_pos: Vector2): VisibleQuestEntity {
+        // Find the nearest object and NPC under the pointer.
         this._raycaster.setFromCamera(pointer_pos, this._camera);
+        const [nearest_object] = this._raycaster.intersectObjects(
+            this._obj_geometry.children);
         const [nearest_npc] = this._raycaster.intersectObjects(
             this._npc_geometry.children);
 
-        if (!nearest_npc) {
+        if (!nearest_object && !nearest_npc) {
             return null;
         }
 
-        const data = nearest_npc;
-        data.drag_adjust = nearest_npc.object.position
+        const object_dist = nearest_object ? nearest_object.distance : Infinity;
+        const npc_dist = nearest_npc ? nearest_npc.distance : Infinity;
+        const nearest_data = object_dist < npc_dist ? nearest_object : nearest_npc;
+
+        nearest_data.entity = nearest_data.object.userData.entity;
+        nearest_data.drag_adjust = nearest_data.object.position
             .clone()
-            .sub(nearest_npc.point);
-        data.drag_y = 0;
+            .sub(nearest_data.point);
+        nearest_data.drag_y = 0;
 
         // Find vertical distance to terrain.
         this._raycaster.set(
-            nearest_npc.object.position, new Vector3(0, -1, 0));
+            nearest_data.object.position, new Vector3(0, -1, 0));
         const [terrain] = this._raycaster.intersectObject(
             this._collision_geometry.children[0], true);
 
         if (terrain) {
-            data.drag_adjust.sub(
+            nearest_data.drag_adjust.sub(
                 new Vector3(0, terrain.distance, 0));
-            data.drag_y += terrain.distance;
+            nearest_data.drag_y += terrain.distance;
         }
 
-        return data;
+        return nearest_data;
     }
 
     /**
@@ -331,5 +345,16 @@ export class QuestRenderer {
         }
 
         return null;
+    }
+
+    _get_color(entity, type) {
+        const is_npc = entity instanceof QuestNpc;
+
+        switch (type) {
+            default:
+            case 'normal': return is_npc ? NPC_COLOR : OBJECT_COLOR;
+            case 'hover': return is_npc ? NPC_HOVER_COLOR : OBJECT_HOVER_COLOR;
+            case 'selected': return is_npc ? NPC_SELECTED_COLOR : OBJECT_SELECTED_COLOR;
+        }
     }
 }

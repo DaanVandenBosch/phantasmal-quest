@@ -47,15 +47,15 @@ class AreaStore {
             area(4, 'VR Spaceship Beta', order++, 3),
             area(15, 'VR Spaceship Final', order++, 1),
             area(5, 'Central Control Area', order++, 1),
-            area(6, 'Jungle East', order++, 1),
-            area(7, 'Jungle 3', order++, 1),
+            area(6, 'Jungle Area East', order++, 1),
+            area(7, 'Jungle Area North', order++, 1),
             area(8, 'Mountain Area', order++, 3),
             area(9, 'Seaside Area', order++, 1),
             area(12, 'Cliffs of Gal Da Val', order++, 1),
             area(10, 'Seabed Upper Levels', order++, 3),
             area(11, 'Seabed Lower Levels', order++, 3),
             area(13, 'Test Subject Disposal Area', order++, 1),
-            area(16, 'Jungle 6', order++, 1),
+            area(16, 'Seaside Area at Night', order++, 1),
             area(17, 'Control Tower', order++, 5)
         ];
         order = 0;

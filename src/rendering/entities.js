@@ -3,12 +3,19 @@ import { CylinderGeometry, Mesh, MeshLambertMaterial, Object3D } from 'three';
 import { autorun } from 'mobx';
 import { VisibleQuestEntity, QuestNpc, QuestObject, Section } from '../domain';
 
+export const OBJECT_COLOR = 0xFFFF00;
+export const OBJECT_HOVER_COLOR = 0xFFDF3F;
+export const OBJECT_SELECTED_COLOR = 0xFFAA00;
+export const NPC_COLOR = 0xFF0000;
+export const NPC_HOVER_COLOR = 0xFF3F5F;
+export const NPC_SELECTED_COLOR = 0xFF0054;
+
 export function create_object_geometry(object: QuestObject, sections: Section[]): Object3D {
-    return create_geometry(object, sections, 0xffff00, 'Object');
+    return create_geometry(object, sections, OBJECT_COLOR, 'Object');
 }
 
 export function create_npc_geometry(npc: QuestNpc, sections: Section[]): Object3D {
-    return create_geometry(npc, sections, 0xff0000, 'NPC');
+    return create_geometry(npc, sections, NPC_COLOR, 'NPC');
 }
 
 function create_geometry(
@@ -46,7 +53,7 @@ function create_geometry(
         })
     );
     cylinder_mesh.name = type;
-    cylinder_mesh.entity = entity;
+    cylinder_mesh.userData.entity = entity;
 
     // TODO: dispose autorun?
     autorun(() => {

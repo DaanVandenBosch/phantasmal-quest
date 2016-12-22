@@ -67,12 +67,10 @@ export class QuestObject implements VisibleQuestEntity {
 }
 
 export class QuestNpc implements VisibleQuestEntity {
-    @observable type: NpcType;
     @observable area_id: number;
     @observable section_id: number;
     @observable position: Vec3;
-
-    _object3d: ?Object3D = null;
+    @observable type: NpcType;
 
     constructor(
         type: NpcType,
@@ -91,20 +89,6 @@ export class QuestNpc implements VisibleQuestEntity {
         this.area_id = area_id;
         this.section_id = section_id;
         this.position = position;
-    }
-
-    @computed get object3d() {
-        if (this._object3d) {
-            this._object3d.position.x = this.position.x;
-            this._object3d.position.y = this.position.y;
-            this._object3d.position.z = this.position.z;
-        }
-
-        return this._object3d;
-    }
-
-    set object3d(object3d: ?Object3D) {
-        this._object3d = object3d;
     }
 }
 
@@ -309,7 +293,7 @@ export class NpcType {
     NpcType.Zu = new NpcType(id++, 'Zu', true);
     NpcType.Pazuzu = new NpcType(id++, 'Pazuzu', true);
     NpcType.Boota = new NpcType(id++, 'Boota', true);
-    NpcType.ZaBoota = new NpcType(id++, 'Za Boota', true);
+    NpcType.ZeBoota = new NpcType(id++, 'Ze Boota', true);
     NpcType.BaBoota = new NpcType(id++, 'Ba Boota', true);
     NpcType.Dorphon = new NpcType(id++, 'Dorphon', true);
     NpcType.DorphonEclair = new NpcType(id++, 'Dorphon Eclair', true);

@@ -145,7 +145,7 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x0D6}, 2, 2`: return NpcType.Merikle;
 
         case `${0x115}, 0, 4`: return NpcType.Boota;
-        case `${0x115}, 1, 4`: return NpcType.ZaBoota;
+        case `${0x115}, 1, 4`: return NpcType.ZeBoota;
         case `${0x115}, 2, 4`: return NpcType.BaBoota;
         case `${0x117}, 0, 4`: return NpcType.Goran;
         case `${0x117}, 1, 4`: return NpcType.PyroGoran;
