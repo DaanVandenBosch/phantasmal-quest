@@ -1,6 +1,6 @@
 // @flow
 import { Object3D } from 'three';
-import { observable, computed } from 'mobx';
+import { observable } from 'mobx';
 import { is_int } from './utils';
 
 type Vec3 = { x: number, y: number, z: number };
@@ -48,21 +48,25 @@ export class QuestObject implements VisibleQuestEntity {
     @observable area_id: number;
     @observable section_id: number;
     @observable position: Vec3;
+    @observable type: ObjectType;
 
     constructor(
         area_id: number,
         section_id: number,
-        position: Vec3
+        position: Vec3,
+        type: ObjectType
     ) {
         if (!is_int(area_id) || area_id < 0)
             throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
         if (!is_int(section_id) || section_id < 0)
             throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
         if (!position) throw new Error('position is required.');
+        if (!type) throw new Error('type is required.');
 
         this.area_id = area_id;
         this.section_id = section_id;
         this.position = position;
+        this.type = type;
     }
 }
 
@@ -73,22 +77,53 @@ export class QuestNpc implements VisibleQuestEntity {
     @observable type: NpcType;
 
     constructor(
-        type: NpcType,
         area_id: number,
         section_id: number,
-        position: Vec3
+        position: Vec3,
+        type: NpcType
     ) {
-        if (!type) throw new Error('type is required.');
         if (!is_int(area_id) || area_id < 0)
             throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
         if (!is_int(section_id) || section_id < 0)
             throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
         if (!position) throw new Error('position is required.');
+        if (!type) throw new Error('type is required.');
 
-        this.type = type;
         this.area_id = area_id;
         this.section_id = section_id;
         this.position = position;
+        this.type = type;
+    }
+}
+
+export class ObjectType {
+    id: number;
+    name: string;
+
+    constructor(id: number, name: string) {
+        if (!is_int(id) || id < 1)
+            throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
+        if (!name) throw new Error('name is required.');
+
+        this.id = id;
+        this.name = name;
+    }
+}
+
+export class NpcType {
+    id: number;
+    name: string;
+    enemy: boolean;
+
+    constructor(id: number, name: string, enemy: boolean) {
+        if (!is_int(id) || id < 1)
+            throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
+        if (!name) throw new Error('name is required.');
+        if (typeof enemy !== 'boolean') throw new Error('enemy is required.');
+
+        this.id = id;
+        this.name = name;
+        this.enemy = enemy;
     }
 }
 
@@ -146,24 +181,15 @@ export class Section {
     }
 }
 
-export class NpcType {
-    id: number;
-    name: string;
-    enemy: boolean;
+(function () {
+    let id = 1;
 
-    constructor(id: number, name: string, enemy: boolean) {
-        if (!is_int(id) || id < 1)
-            throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
-        if (!name) throw new Error('name is required.');
-        if (typeof enemy !== 'boolean') throw new Error('enemy is required.');
+    ObjectType.Unknown = new ObjectType(id++, 'Unknown');
+    
+    ObjectType.BossTeleporter = new ObjectType(id++, 'Boss Teleporter');
+} ());
 
-        this.id = id;
-        this.name = name;
-        this.enemy = enemy;
-    }
-}
-
-(function() {
+(function () {
     let id = 1;
 
     NpcType.Unknown = new NpcType(id++, 'Unknown', false);
@@ -302,4 +328,5 @@ export class NpcType {
     NpcType.GoranDetonator = new NpcType(id++, 'Goran Detonator', true);
     NpcType.SaintMillion = new NpcType(id++, 'Saint-Million', true);
     NpcType.Shambertin = new NpcType(id++, 'Shambertin', true);
+    NpcType.Kondrieu = new NpcType(id++, "Kondrieu", true);
 } ());

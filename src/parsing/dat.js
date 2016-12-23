@@ -15,7 +15,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
 
         if (entity_type === 0) {
             break;
-        } else if (entity_type === 1) { // Object
+        } else if (entity_type === 1) { // Objects
             const object_count = Math.floor(entities_size / 68);
             const start_position = cursor.position;
 
@@ -29,7 +29,9 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                 const x = cursor.f32();
                 const y = cursor.f32();
                 const z = cursor.f32();
-                cursor.seek(18);
+                cursor.seek(4);
+                const rotation = cursor.u32();
+                cursor.seek(10);
                 const object_id = cursor.u32();
                 const action = cursor.u32();
                 cursor.seek(14);
@@ -40,6 +42,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     group,
                     section_id,
                     position: {x, y, z},
+                    rotation,
                     object_id,
                     action,
                     area_id
@@ -66,7 +69,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                 const y = cursor.f32();
                 const z = cursor.f32();
                 cursor.seek(4);
-                const direction = cursor.u32();
+                const rotation = cursor.u32();
                 cursor.seek(4);
                 const movement_data = cursor.f32();
                 const regular = (cursor.u32() & 0x800000) === 0;
@@ -80,7 +83,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     clone_count,
                     section_id,
                     position: {x, y, z},
-                    direction,
+                    rotation,
                     movement_data,
                     regular,
                     exp,
@@ -96,7 +99,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                 console.warn(`Read ${bytes_read} bytes instead of expected ${entities_size} for entity type ${entity_type} (NPC).`);
             }
         }
-        // There are also unknown entity types 3, 4 and 5.
+        // There are also waves (type 3) and unknown entity types 4 and 5.
 
         offset += total_size;
     }

@@ -2,7 +2,7 @@
 /*eslint default-case: ["off"]*/
 import { ArrayBufferCursor } from './ArrayBufferCursor';
 import { parse_qst } from './qst';
-import { AreaVariant, QuestNpc, NpcType, QuestObject, Quest } from '../domain';
+import { AreaVariant, QuestNpc, QuestObject, Quest, ObjectType, NpcType } from '../domain';
 import { area_store } from '../store';
 
 /**
@@ -107,7 +107,8 @@ function parse_obj_data(episode: number, objs: any[]): QuestObject[] {
         obj_data => new QuestObject(
             obj_data.area_id,
             obj_data.section_id,
-            obj_data.position
+            obj_data.position,
+            get_object_type(obj_data.type_id)
         )
     );
 }
@@ -115,12 +116,20 @@ function parse_obj_data(episode: number, objs: any[]): QuestObject[] {
 function parse_npc_data(episode: number, npcs: any[]): QuestNpc[] {
     return npcs.map(
         npc_data => new QuestNpc(
-            get_npc_type(episode, npc_data),
             npc_data.area_id,
             npc_data.section_id,
-            npc_data.position
+            npc_data.position,
+            get_npc_type(episode, npc_data)
         )
     );
+}
+
+function get_object_type(type_id: number): ObjectType {
+    switch (type_id) {
+        case 25: return ObjectType.BossTeleporter;
+    }
+
+    return ObjectType.Unknown;
 }
 
 function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcType {
@@ -196,8 +205,8 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x114}, 1, 4`: return NpcType.Pazuzu;
         case `${0x116}, 0, 4`: return NpcType.Dorphon;
         case `${0x116}, 1, 4`: return NpcType.DorphonEclair;
-        case `${0x119}, 0, 4`: return NpcType.SaintMillion;
-        case `${0x119}, 1, 4`: return NpcType.Shambertin;
+        case `${0x119}, 0, 4`: return regular ? NpcType.SaintMillion : NpcType.Kondrieu;
+        case `${0x119}, 1, 4`: return regular ? NpcType.Shambertin : NpcType.Kondrieu;
     }
 
     switch (`${type_id}, ${episode}`) {
