@@ -448,12 +448,8 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x041}, 0, 2`: return NpcType.RagRappy2;
         case `${0x041}, 0, 4`: return NpcType.SandRappy;
         case `${0x041}, 1, 1`: return NpcType.AlRappy;
-        case `${0x041}, 1, 2`: return NpcType.AlRappy2;
+        case `${0x041}, 1, 2`: return NpcType.LoveRappy;
         case `${0x041}, 1, 4`: return NpcType.DelRappy;
-        case `${0x043}, 0, 1`: return NpcType.SavageWolf;
-        case `${0x043}, 0, 2`: return NpcType.SavageWolf2;
-        case `${0x043}, 1, 1`: return NpcType.BarbarousWolf;
-        case `${0x043}, 1, 2`: return NpcType.BarbarousWolf2;
 
         case `${0x061}, 0, 1`: return area_id > 15 ? NpcType.DelLily : NpcType.PoisonLily;
         case `${0x061}, 0, 2`: return area_id > 15 ? NpcType.DelLily : NpcType.PoisonLily2;
@@ -490,6 +486,8 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
     switch (`${type_id}, ${episode}`) {
         case `${0x042}, 1`: return NpcType.Monest;
         case `${0x042}, 2`: return NpcType.Monest2;
+        case `${0x043}, 1`: return regular ? NpcType.SavageWolf : NpcType.BarbarousWolf;
+        case `${0x043}, 2`: return regular ? NpcType.SavageWolf2 : NpcType.BarbarousWolf2;
 
         case `${0x060}, 1`: return NpcType.GrassAssassin;
         case `${0x060}, 2`: return NpcType.GrassAssassin2;
@@ -503,8 +501,8 @@ function get_npc_type(episode: number, {type_id, regular, skin, area_id}): NpcTy
         case `${0x082}, 1`: return regular ? NpcType.SinowBeat : NpcType.SinowGold;
         case `${0x083}, 1`: return NpcType.Canadine;
         case `${0x084}, 1`: return NpcType.Canane;
-        case `${0x085}, 1`: return NpcType.Dubwitch;
-        case `${0x085}, 2`: return NpcType.Dubwitch2;
+        case `${0x085}, 1`: return NpcType.Dubswitch;
+        case `${0x085}, 2`: return NpcType.Dubswitch2;
 
         case `${0x0A0}, 1`: return NpcType.Delsaber;
         case `${0x0A0}, 2`: return NpcType.Delsaber2;

@@ -69,7 +69,7 @@ export class NpcType {
     NpcType.SinowGold = new NpcType(id++, 'Sinow Gold', true);
     NpcType.Canadine = new NpcType(id++, 'Canadine', true);
     NpcType.Canane = new NpcType(id++, 'Canane', true);
-    NpcType.Dubwitch = new NpcType(id++, 'Dubwitch', true);
+    NpcType.Dubswitch = new NpcType(id++, 'Dubswitch', true);
     NpcType.VolOpt = new NpcType(id++, 'Vol Opt', true);
 
     NpcType.Delsaber = new NpcType(id++, 'Delsaber', true);
@@ -87,7 +87,7 @@ export class NpcType {
     NpcType.Hildebear2 = new NpcType(id++, 'Hildebear (Ep. II)', true);
     NpcType.Hildeblue2 = new NpcType(id++, 'Hildeblue (Ep. II)', true);
     NpcType.RagRappy2 = new NpcType(id++, 'Rag Rappy (Ep. II)', true);
-    NpcType.AlRappy2 = new NpcType(id++, 'Al Rappy (Ep. II)', true);
+    NpcType.LoveRappy = new NpcType(id++, 'Love Rappy', true);
     NpcType.Monest2 = new NpcType(id++, 'Monest (Ep. II)', true);
     NpcType.PoisonLily2 = new NpcType(id++, 'Poison Lily (Ep. II)', true);
     NpcType.NarLily2 = new NpcType(id++, 'Nar Lily (Ep. II)', true);
@@ -104,7 +104,7 @@ export class NpcType {
     NpcType.Dubchic2 = new NpcType(id++, 'Dubchic (Ep. II)', true);
     NpcType.Gilchic2 = new NpcType(id++, 'Gilchic (Ep. II)', true);
     NpcType.Garanz2 = new NpcType(id++, 'Garanz (Ep. II)', true);
-    NpcType.Dubwitch2 = new NpcType(id++, 'Dubwitch (Ep. II)', true);
+    NpcType.Dubswitch2 = new NpcType(id++, 'Dubswitch (Ep. II)', true);
     NpcType.Delsaber2 = new NpcType(id++, 'Delsaber (Ep. II)', true);
     NpcType.ChaosSorcerer2 = new NpcType(id++, 'Chaos Sorcerer (Ep. II)', true);
     NpcType.GolDragon = new NpcType(id++, 'Gol Dragon', true);
