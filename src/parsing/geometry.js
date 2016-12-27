@@ -8,6 +8,7 @@ import {
     Mesh,
     MeshBasicMaterial,
     MeshLambertMaterial,
+    MultiMaterial,
     Object3D,
     TriangleStripDrawMode,
     Vector3
@@ -49,13 +50,15 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
             const v1 = triangle_index_offset + dv.getUint16(j, true);
             const v2 = triangle_index_offset + dv.getUint16(j + 2, true);
             const v3 = triangle_index_offset + dv.getUint16(j + 4, true);
+            const flags = dv.getUint16(j + 6, true);
             const n = new Vector3(
                 dv.getFloat32(j + 8, true),
                 dv.getFloat32(j + 12, true),
                 dv.getFloat32(j + 16, true)
             );
+            const color_index = flags & 0b1000000 ? 3 : (flags & 0b10000 ? 2 : (flags & 0b1 ? 1 : 0));
 
-            geometry.faces.push(new Face3(v1, v2, v3, n));
+            geometry.faces.push(new Face3(v1, v2, v3, n, null, color_index));
         }
     }
 
@@ -63,11 +66,20 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
 
     const mesh = new Mesh(
         geometry,
-        new MeshLambertMaterial({
-            color: 0x20c070,
-            transparent: true,
-            opacity: 0.5,
-        })
+        new MultiMaterial([
+            // Wall
+            new MeshBasicMaterial({
+                color: 0xA0A0A0,
+                transparent: true,
+                opacity: 0.25,
+            }),
+            // Ground
+            new MeshLambertMaterial({ color: 0x706030 }),
+            // Vegetation
+            new MeshLambertMaterial({ color: 0x506020 }),
+            // Section transition zone
+            new MeshLambertMaterial({ color: 0x407080 })
+        ])
     );
     mesh.renderOrder = 1;
 
@@ -75,13 +87,32 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
 
     const wireframe_mesh = new Mesh(
         geometry,
-        new MeshBasicMaterial({
-            color: 0x88ffcc,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.75,
-        })
+        new MultiMaterial([
+            // Wall
+            new MeshBasicMaterial({
+                color: 0xA0A0A0,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3,
+            }),
+            // Ground
+            new MeshBasicMaterial({
+                color: 0x807040,
+                wireframe: true
+            }),
+            // Vegetation
+            new MeshBasicMaterial({
+                color: 0x607030,
+                wireframe: true
+            }),
+            // Section transition zone
+            new MeshBasicMaterial({
+                color: 0x508090,
+                wireframe: true
+            })
+        ])
     );
+    wireframe_mesh.renderOrder = 2;
 
     object.add(wireframe_mesh);
 
