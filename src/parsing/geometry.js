@@ -56,7 +56,10 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
                 dv.getFloat32(j + 12, true),
                 dv.getFloat32(j + 16, true)
             );
-            const color_index = flags & 0b1000000 ? 3 : (flags & 0b10000 ? 2 : (flags & 0b1 ? 1 : 0));
+            const is_section_transition = flags & 0b1000000;
+            const is_vegetation = flags & 0b10000;
+            const is_ground = flags & 0b1;
+            const color_index = is_section_transition ? 3 : (is_vegetation ? 2 : (is_ground ? 1 : 0));
 
             geometry.faces.push(new Face3(v1, v2, v3, n, null, color_index));
         }
