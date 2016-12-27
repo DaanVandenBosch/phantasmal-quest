@@ -1,7 +1,7 @@
 // @flow
-const ASCII_DECODER = new TextDecoder('ascii');
-const UTF_16BE_DECODER = new TextDecoder('utf-16be');
-const UTF_16LE_DECODER = new TextDecoder('utf-16le');
+const ASCII_DECODER = window.TextDecoder && new TextDecoder('ascii');
+const UTF_16BE_DECODER = window.TextDecoder && new TextDecoder('utf-16be');
+const UTF_16LE_DECODER = window.TextDecoder && new TextDecoder('utf-16le');
 
 /**
  * A cursor for reading and writing binary data. Uses an ArrayBuffer internally.
@@ -38,7 +38,7 @@ export class ArrayBufferCursor {
      * @param buffer_or_capacity - If an ArrayBuffer is given, writes to the cursor will be reflected in this array buffer and vice versa until a cursor write that requires allocating a new internal buffer happens
      * @param little_endian - Decides in which byte order multi-byte integers and floats will be interpreted
      */
-    constructor(buffer_or_capacity: ArrayBuffer | number, little_endian: boolean) {
+    constructor(buffer_or_capacity: ArrayBuffer | number, little_endian: ?boolean) {
         if (typeof buffer_or_capacity === 'number') {
             this._buffer = new ArrayBuffer(buffer_or_capacity);
             this.size = 0;
@@ -47,7 +47,7 @@ export class ArrayBufferCursor {
             this.size = this._buffer.byteLength;
         }
 
-        this.little_endian = little_endian;
+        this.little_endian = !!little_endian;
         this.position = 0;
         this._dv = new DataView(this._buffer);
         this._utf_16_decoder = little_endian ? UTF_16LE_DECODER : UTF_16BE_DECODER;

@@ -1,12 +1,10 @@
-import { is_int } from '../utils';
-
 export class NpcType {
     id: number;
     name: string;
     enemy: boolean;
 
     constructor(id: number, name: string, enemy: boolean) {
-        if (!is_int(id) || id < 1)
+        if (!Number.isInteger(id) || id < 1)
             throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
         if (!name) throw new Error('name is required.');
         if (typeof enemy !== 'boolean') throw new Error('enemy is required.');

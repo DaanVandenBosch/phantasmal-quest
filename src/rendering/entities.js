@@ -1,7 +1,7 @@
 // @flow
 import { CylinderGeometry, Mesh, MeshLambertMaterial, Object3D } from 'three';
 import { autorun } from 'mobx';
-import { VisibleQuestEntity, QuestNpc, QuestObject, Section } from '../domain';
+import { Vec3, VisibleQuestEntity, QuestNpc, QuestObject, Section } from '../domain';
 
 export const OBJECT_COLOR = 0xFFFF00;
 export const OBJECT_HOVER_COLOR = 0xFFDF3F;
@@ -27,9 +27,10 @@ function create_geometry(
     let {x, y, z} = entity.position;
 
     const section = sections.find(s => s.id === entity.section_id);
+    entity.section = section;
 
     if (section) {
-        const [sec_x, sec_y, sec_z] = section.position;
+        const {x: sec_x, y: sec_y, z: sec_z} = section.position;
         const sin_section_rotation = Math.sin(section.y_axis_rotation);
         const cos_section_rotation = Math.cos(section.y_axis_rotation);
 
@@ -61,7 +62,7 @@ function create_geometry(
         cylinder_mesh.position.set(x, y, z);
     });
 
-    entity.position = { x, y, z };
+    entity.position = new Vec3(x, y, z);
 
     return cylinder_mesh;
 }

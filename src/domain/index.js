@@ -1,12 +1,50 @@
 // @flow
 import { Object3D } from 'three';
-import { observable } from 'mobx';
-import { is_int } from '../utils';
+import { computed, observable } from 'mobx';
 
-type Vec3 = { x: number, y: number, z: number };
+export class Vec3 {
+    x: number;
+    y: number;
+    z: number;
+
+    constructor(x: ?number, y: ?number, z: ?number) {
+        this.x = x || 0;
+        this.y = y || 0;
+        this.z = z || 0;
+    }
+};
 
 export { NpcType } from './NpcType';
 export { ObjectType } from './ObjectType';
+
+export class Section {
+    id: number;
+    @observable position: Vec3;
+    @observable y_axis_rotation: number;
+
+    constructor(
+        id: number,
+        position: Vec3,
+        y_axis_rotation: number
+    ) {
+        if (!Number.isInteger(id) || id < -1)
+            throw new Error(`Expected id to be an integer greater than or equal to -1, got ${id}.`);
+        if (!position) throw new Error('position is required.');
+        if (typeof y_axis_rotation !== 'number') throw new Error('y_axis_rotation is required.');
+
+        this.id = id;
+        this.position = position;
+        this.y_axis_rotation = y_axis_rotation;
+    }
+
+    @computed get sin_y_axis_rotation() {
+        return Math.sin(this.y_axis_rotation);
+    }
+
+    @computed get cos_y_axis_rotation() {
+        return Math.cos(this.y_axis_rotation);
+    }
+}
 
 export class Quest {
     @observable name: string;
@@ -40,17 +78,58 @@ export class Quest {
     }
 }
 
-export interface VisibleQuestEntity {
-    area_id: number;
-    section_id: number;
-    position: Vec3;
-    object3d: Object3D
-}
-
-export class QuestObject implements VisibleQuestEntity {
+export class VisibleQuestEntity {
     @observable area_id: number;
     @observable section_id: number;
+    @observable section: Section;
+    /**
+     * World position
+     */
     @observable position: Vec3;
+    object3d: ?Object3D = null;
+
+    constructor(
+        area_id: number,
+        section_id: number,
+        position: Vec3
+    ) {
+        if (Object.getPrototypeOf(this) === VisibleQuestEntity.prototype)
+            throw new Error('Abstract class should not be instantiated directly.');
+        if (!Number.isInteger(area_id) || area_id < 0)
+            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
+        if (!Number.isInteger(section_id) || section_id < 0)
+            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
+        if (!position) throw new Error('position is required.');
+
+        this.area_id = area_id;
+        this.section_id = section_id;
+        this.position = position;
+    }
+
+    /**
+     * Section-relative position
+     */
+    @computed get section_position() {
+        let {x, y, z} = this.position;
+
+        if (this.section) {
+            const rel_x = x - this.section.position.x;
+            const rel_y = y - this.section.position.y;
+            const rel_z = z - this.section.position.z;
+            const sin = -this.section.sin_y_axis_rotation;
+            const cos = this.section.cos_y_axis_rotation;
+            const rot_x = cos * rel_x + sin * rel_z;
+            const rot_z = -sin * rel_x + cos * rel_z;
+            x = rot_x;
+            y = rel_y;
+            z = rot_z;
+        }
+
+        return new Vec3(x, y, z);
+    }
+}
+
+export class QuestObject extends VisibleQuestEntity {
     @observable type: ObjectType;
 
     constructor(
@@ -59,24 +138,15 @@ export class QuestObject implements VisibleQuestEntity {
         position: Vec3,
         type: ObjectType
     ) {
-        if (!is_int(area_id) || area_id < 0)
-            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
-        if (!is_int(section_id) || section_id < 0)
-            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
-        if (!position) throw new Error('position is required.');
+        super(area_id, section_id, position);
+
         if (!type) throw new Error('type is required.');
 
-        this.area_id = area_id;
-        this.section_id = section_id;
-        this.position = position;
         this.type = type;
     }
 }
 
-export class QuestNpc implements VisibleQuestEntity {
-    @observable area_id: number;
-    @observable section_id: number;
-    @observable position: Vec3;
+export class QuestNpc extends VisibleQuestEntity {
     @observable type: NpcType;
 
     constructor(
@@ -85,16 +155,10 @@ export class QuestNpc implements VisibleQuestEntity {
         position: Vec3,
         type: NpcType
     ) {
-        if (!is_int(area_id) || area_id < 0)
-            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
-        if (!is_int(section_id) || section_id < 0)
-            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
-        if (!position) throw new Error('position is required.');
+        super(area_id, section_id, position);
+
         if (!type) throw new Error('type is required.');
 
-        this.area_id = area_id;
-        this.section_id = section_id;
-        this.position = position;
         this.type = type;
     }
 }
@@ -106,7 +170,7 @@ export class Area {
     area_variants: AreaVariant[];
 
     constructor(id: number, name: string, order: number, area_variants: AreaVariant[]) {
-        if (!is_int(id) || id < 0)
+        if (!Number.isInteger(id) || id < 0)
             throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
         if (!name) throw new Error('name is required.');
         if (!area_variants) throw new Error('area_variants is required.');
@@ -124,31 +188,9 @@ export class AreaVariant {
     @observable sections: Section[] = [];
 
     constructor(id: number) {
-        if (!is_int(id) || id < 0)
+        if (!Number.isInteger(id) || id < 0)
             throw new Error(`Expected id to be a non-negative integer, got ${id}.`);
 
         this.id = id;
-    }
-}
-
-export class Section {
-    id: number;
-    position: [number, number, number];
-    y_axis_rotation: number;
-
-    constructor(
-        id: number,
-        position: [number, number, number],
-        y_axis_rotation: number
-    ) {
-        if (!is_int(id) || id < -1)
-            throw new Error(`Expected id to be an integer greater than or equal to -1, got ${id}.`);
-        if (!position) throw new Error('position is required.');
-        if (position.length !== 3) throw new Error('position should have 3 elements.');
-        if (typeof y_axis_rotation !== 'number') throw new Error('y_axis_rotation is required.');
-
-        this.id = id;
-        this.position = position;
-        this.y_axis_rotation = y_axis_rotation;
     }
 }

@@ -13,7 +13,7 @@ const table_style = {
 };
 
 const description_style = {
-    whiteSpace: 'pre',
+    whiteSpace: 'pre-wrap',
     padding: '10px 0'
 };
 

@@ -2,7 +2,7 @@
 /*eslint default-case: ["off"]*/
 import { ArrayBufferCursor } from './ArrayBufferCursor';
 import { parse_qst } from './qst';
-import { AreaVariant, QuestNpc, QuestObject, Quest, ObjectType, NpcType } from '../domain';
+import { Vec3, AreaVariant, QuestNpc, QuestObject, Quest, ObjectType, NpcType } from '../domain';
 import { area_store } from '../store';
 
 /**
@@ -103,25 +103,27 @@ function get_func_operations(operations: any[], func_offset: number) {
 }
 
 function parse_obj_data(episode: number, objs: any[]): QuestObject[] {
-    return objs.map(
-        obj_data => new QuestObject(
+    return objs.map(obj_data => {
+        const {x, y, z} = obj_data.position;
+        return new QuestObject(
             obj_data.area_id,
             obj_data.section_id,
-            obj_data.position,
+            new Vec3(x, y, z),
             get_object_type(obj_data.type_id)
-        )
-    );
+        );
+    });
 }
 
 function parse_npc_data(episode: number, npcs: any[]): QuestNpc[] {
-    return npcs.map(
-        npc_data => new QuestNpc(
+    return npcs.map(npc_data => {
+        const {x, y, z} = npc_data.position;
+        return new QuestNpc(
             npc_data.area_id,
             npc_data.section_id,
-            npc_data.position,
+            new Vec3(x, y, z),
             get_npc_type(episode, npc_data)
-        )
-    );
+        );
+    });
 }
 
 function get_object_type(type_id: number): ObjectType {

@@ -12,7 +12,7 @@ import {
     WebGLRenderer
 } from 'three';
 import OrbitControlsCreator from 'three-orbit-controls';
-import { Area, Quest, VisibleQuestEntity, QuestObject, QuestNpc } from '../domain';
+import { Vec3, Area, Quest, VisibleQuestEntity, QuestObject, QuestNpc } from '../domain';
 import { get_area_collision_geometry } from '../area-data';
 import {
     OBJECT_COLOR,
@@ -247,11 +247,11 @@ export class QuestRenderer {
             const terrain = this._pick_terrain(pointer_pos, data);
 
             if (terrain) {
-                data.entity.position = {
-                    x: terrain.point.x,
-                    y: terrain.point.y + data.drag_y,
-                    z: terrain.point.z
-                };
+                data.entity.position = new Vec3(
+                    terrain.point.x,
+                    terrain.point.y + data.drag_y,
+                    terrain.point.z
+                );
             }
         } else {
             // User is hovering.

@@ -1,11 +1,9 @@
-import { is_int } from '../utils';
-
 export class ObjectType {
     id: number;
     name: string;
 
     constructor(id: number, name: string) {
-        if (!is_int(id) || id < 1)
+        if (!Number.isInteger(id) || id < 1)
             throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
         if (!name) throw new Error('name is required.');
 

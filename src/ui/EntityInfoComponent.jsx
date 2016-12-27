@@ -15,7 +15,8 @@ const table_style = {
 
 export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEntity }) => {
     if (entity) {
-        const {x, y, z} = entity.position;
+        const pos = entity.position;
+        const sect_pos = entity.section_position;
         let name = null;
         let type_specifics = null;
 
@@ -44,8 +45,28 @@ export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEnt
                             <td>Section: </td><td>{entity.section_id}</td>
                         </tr>
                         <tr>
-                            <td>Position: </td>
-                            <td>{Math.round(x)}, {Math.round(y)}, {Math.round(z)}</td>
+                            <td colSpan="2">World position: </td>
+                        </tr>
+                        <tr>
+                            <td>X: </td><td>{Math.round(pos.x)}</td>
+                        </tr>
+                        <tr>
+                            <td>Y: </td><td>{Math.round(pos.y)}</td>
+                        </tr>
+                        <tr>
+                            <td>Z: </td><td>{Math.round(pos.z)}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan="2">Section position: </td>
+                        </tr>
+                        <tr>
+                            <td>X: </td><td>{Math.round(sect_pos.x)}</td>
+                        </tr>
+                        <tr>
+                            <td>Y: </td><td>{Math.round(sect_pos.y)}</td>
+                        </tr>
+                        <tr>
+                            <td>Z: </td><td>{Math.round(sect_pos.z)}</td>
                         </tr>
                         {type_specifics}
                     </tbody>

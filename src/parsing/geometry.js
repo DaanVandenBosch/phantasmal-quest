@@ -12,7 +12,7 @@ import {
     TriangleStripDrawMode,
     Vector3
 } from 'three';
-import { Section } from '../domain';
+import { Vec3, Section } from '../domain';
 
 export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
     const dv = new DataView(array_buffer);
@@ -117,7 +117,7 @@ export function parse_n_rel(
 
         sections.set(section_id, new Section(
             section_id,
-            [section_x, section_y, section_z],
+            new Vec3(section_x, section_y, section_z),
             section_rotation));
 
         const simple_geometry_offset_table_offset = dv.getUint32(i + 32, true);
