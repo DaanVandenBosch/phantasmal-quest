@@ -81,7 +81,7 @@ export class Quest {
 export class VisibleQuestEntity {
     @observable area_id: number;
     @observable section_id: number;
-    @observable section: Section;
+    @observable section: ?Section = null;
     /**
      * World position
      */

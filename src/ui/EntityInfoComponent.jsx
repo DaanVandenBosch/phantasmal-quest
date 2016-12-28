@@ -15,6 +15,7 @@ const table_style = {
 
 export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEntity }) => {
     if (entity) {
+        const section_id = entity.section ? entity.section.id : entity.section_id;
         const pos = entity.position;
         const sect_pos = entity.section_position;
         let name = null;
@@ -42,7 +43,7 @@ export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEnt
                     <tbody>
                         {name}
                         <tr>
-                            <td>Section: </td><td>{entity.section_id}</td>
+                            <td>Section: </td><td>{section_id}</td>
                         </tr>
                         <tr>
                             <td colSpan="2">World position: </td>

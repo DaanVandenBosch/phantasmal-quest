@@ -13,7 +13,7 @@ import {
 } from 'three';
 import OrbitControlsCreator from 'three-orbit-controls';
 import { Vec3, Area, Quest, VisibleQuestEntity, QuestObject, QuestNpc } from '../domain';
-import { get_area_collision_geometry } from '../area-data';
+import { get_area_collision_geometry, get_area_render_geometry } from '../area-data';
 import {
     OBJECT_COLOR,
     OBJECT_HOVER_COLOR,
@@ -40,7 +40,8 @@ export class QuestRenderer {
     _area: Area = null;
     _objs: Map<number, QuestObject[]> = new Map(); // Objs grouped by area id
     _npcs: Map<number, QuestNpc[]> = new Map(); // Npcs grouped by area id
-    _collision_geometry = null;
+    _collision_geometry = new Object3D();
+    _render_geometry = new Object3D();
     _obj_geometry = new Object3D();
     _npc_geometry = new Object3D();
     _on_select = null;
@@ -140,6 +141,12 @@ export class QuestRenderer {
 
                     this._collision_geometry = geometry;
                     this._scene.add(geometry);
+                }
+            });
+
+            get_area_render_geometry(episode, area_id, variant_id).then(geometry => {
+                if (this._quest && this._area) {
+                    this._render_geometry = geometry;
                 }
             });
         }
@@ -252,6 +259,10 @@ export class QuestRenderer {
                     terrain.point.y + data.drag_y,
                     terrain.point.z
                 );
+
+                if (terrain.section) {
+                    data.entity.section = terrain.section;
+                }
             }
         } else {
             // User is hovering.
@@ -315,8 +326,8 @@ export class QuestRenderer {
         // Find vertical distance to terrain.
         this._raycaster.set(
             nearest_data.object.position, new Vector3(0, -1, 0));
-        const [terrain] = this._raycaster.intersectObject(
-            this._collision_geometry.children[0], true);
+        const [terrain] = this._raycaster.intersectObjects(
+            this._collision_geometry.children, true);
 
         if (terrain) {
             nearest_data.drag_adjust.sub(
@@ -333,13 +344,25 @@ export class QuestRenderer {
     _pick_terrain(pointer_pos: Vector2, data: any): * {
         this._raycaster.setFromCamera(pointer_pos, this._camera);
         this._raycaster.ray.origin.add(data.drag_adjust);
-        const terrains = this._raycaster.intersectObject(
-            this._collision_geometry.children[0], true);
+        const terrains = this._raycaster.intersectObjects(
+            this._collision_geometry.children, true);
 
         // Don't allow entities to be placed on very steep terrain.
         // E.g. walls.
+        // TODO: make use of the flags field in the collision data.
         for (const terrain of terrains) {
             if (terrain.face.normal.y > 0.75) {
+                // Find section ID.
+                this._raycaster.set(
+                    terrain.point.clone().setY(1000), new Vector3(0, -1, 0));
+                const render_terrains = this._raycaster
+                    .intersectObjects(this._render_geometry.children, true)
+                    .filter(rt => rt.object.userData.section.id >= 0);
+
+                if (render_terrains.length) {
+                    terrain.section = render_terrains[0].object.userData.section;
+                }
+
                 return terrain;
             }
         }
