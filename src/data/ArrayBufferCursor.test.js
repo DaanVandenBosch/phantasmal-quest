@@ -88,20 +88,53 @@ test('u8_array', () => {
     expect(cursor.seek_start(5).u8_array(3)).toEqual([6, 7, 8]);
 });
 
-test('string_ascii', () => {
-    const cursor = new ArrayBufferCursor(new Uint8Array([7, 65, 66, 0, 255, 13]).buffer, true);
+function test_string_read(method_name: string, char_size: number) {
+    test(method_name, () => {
+        const char_array = [7, 65, 66, 0, 255, 13];
 
-    expect(cursor.seek(1).string_ascii(4, true, true)).toBe('AB');
-    expect(cursor.u8()).toBe(13);
-});
+        for (const little_endian of [false, true]) {
+            const char_array_copy = [];
 
-test('string_utf_16', () => {
-    const cursor = new ArrayBufferCursor(
-        new Uint8Array([7, 65, 0, 66, 0, 0, 0, 255, 255, 13]).buffer, true);
+            for (const char of char_array) {
+                if (little_endian) char_array_copy.push(char);
 
-    expect(cursor.seek(1).string_utf_16(8, true, true)).toBe('AB');
-    expect(cursor.u8()).toBe(13);
-});
+                for (let i = 0; i < char_size - 1; ++i) {
+                    char_array_copy.push(0);
+                }
+
+                if (!little_endian) char_array_copy.push(char);
+            }
+
+            const cursor = new ArrayBufferCursor(
+                new Uint8Array(char_array_copy).buffer, little_endian);
+
+            cursor.seek_start(char_size);
+            expect(cursor[method_name](4 * char_size, true, true)).toBe('AB');
+            expect(cursor.position).toBe(5 * char_size);
+            cursor.seek_start(char_size);
+            expect(cursor[method_name](2 * char_size, true, true)).toBe('AB');
+            expect(cursor.position).toBe(3 * char_size);
+
+            cursor.seek_start(char_size);
+            expect(cursor[method_name](4 * char_size, true, false)).toBe('AB');
+            expect(cursor.position).toBe(4 * char_size);
+            cursor.seek_start(char_size);
+            expect(cursor[method_name](2 * char_size, true, false)).toBe('AB');
+            expect(cursor.position).toBe(3 * char_size);
+
+            cursor.seek_start(char_size);
+            expect(cursor[method_name](4 * char_size, false, true)).toBe('AB\0ÿ');
+            expect(cursor.position).toBe(5 * char_size);
+
+            cursor.seek_start(char_size);
+            expect(cursor[method_name](4 * char_size, false, false)).toBe('AB\0ÿ');
+            expect(cursor.position).toBe(5 * char_size);
+        }
+    });
+}
+
+test_string_read('string_ascii', 1);
+test_string_read('string_utf_16', 2);
 
 function test_integer_write(method_name: string) {
     test(method_name, () => {

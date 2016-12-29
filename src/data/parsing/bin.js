@@ -31,8 +31,13 @@ export function parse_bin(cursor: ArrayBufferCursor) {
         short_description,
         long_description,
         function_offsets,
-        instructions
+        instructions,
+        data: cursor.seek_start(0).take(cursor.size)
     };
+}
+
+export function write_bin({data}): ArrayBufferCursor {
+    return data.seek_start(0);
 }
 
 type Instruction = { opcode: number, mnemonic: string, args: any[], size: number };

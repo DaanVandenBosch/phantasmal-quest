@@ -188,7 +188,9 @@ export class ArrayBufferCursor {
 
         const r = ASCII_DECODER.decode(
             new DataView(this._buffer, this.position, string_length));
-        this.position += drop_remaining ? max_byte_length : string_length;
+        this.position += drop_remaining
+            ? max_byte_length
+            : Math.min(string_length + 1, max_byte_length);
         return r;
     }
 
@@ -202,7 +204,9 @@ export class ArrayBufferCursor {
 
         const r = this._utf_16_decoder.decode(
             new DataView(this._buffer, this.position, string_length));
-        this.position += drop_remaining ? max_byte_length : string_length;
+        this.position += drop_remaining
+            ? max_byte_length
+            : Math.min(string_length + 2, max_byte_length);
         return r;
     }
 

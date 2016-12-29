@@ -1,8 +1,8 @@
+// @flow
 import * as fs from 'fs';
 import { ArrayBufferCursor } from '../ArrayBufferCursor';
 import * as prs from '../compression/prs';
 import { parse_dat, write_dat } from './dat';
-import { parse_qst } from './qst';
 
 /**
  * Parse a file, convert the resulting structure to DAT again and check whether the end result is equal to the original.
