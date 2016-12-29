@@ -41,42 +41,44 @@ test('reallocation of internal buffer when necessary', () => {
 
 function test_integer_read(method_name: string) {
     test(method_name, () => {
-        const bytes = parseInt(method_name.replace(/^[iu](\d+)$/, '$1')) / 8;
+        const bytes = parseInt(method_name.replace(/^[iu](\d+)$/, '$1'), 10) / 8;
         let test_number_1 = 0;
         let test_number_2 = 0;
         // The "false" arrays are for big endian tests and the "true" arrays for little endian tests.
-        const test_arrays_1 = { false: [], true: [] };
-        const test_arrays_2 = { false: [], true: [] };
+        const test_arrays = { false: [], true: [] };
 
         for (let i = 1; i <= bytes; ++i) {
             // Generates numbers of the form 0x010203...
             test_number_1 <<= 8;
             test_number_1 |= i;
+            test_arrays[false].push(i);
+            test_arrays[true].unshift(i);
+        }
+
+        for (let i = bytes + 1; i <= 2 * bytes; ++i) {
             test_number_2 <<= 8;
-            test_number_2 |= i + bytes;
-            test_arrays_1[false].push(i);
-            test_arrays_1[true].unshift(i);
-            test_arrays_2[false].push(i + bytes);
-            test_arrays_2[true].unshift(i + bytes);
+            test_number_2 |= i;
+            test_arrays[false].push(i);
+            test_arrays[true].splice(bytes, 0, i);
         }
 
         for (const little_endian of [false, true]) {
-            const cursor = new ArrayBufferCursor(0, little_endian);
-            cursor[method_name](test_number_1);
+            const cursor = new ArrayBufferCursor(
+                new Uint8Array(test_arrays[little_endian]).buffer, little_endian);
 
-            expect(cursor.position).toBe(bytes);
-            expect(cursor.seek_start(0).u8_array(bytes))
-                .toEqual(test_arrays_1[little_endian]);
+            expect(cursor[method_name]()).toBe(test_number_1);
             expect(cursor.position).toBe(bytes);
 
-            cursor[method_name](test_number_2);
-
+            expect(cursor[method_name]()).toBe(test_number_2);
             expect(cursor.position).toBe(2 * bytes);
-            expect(cursor.seek_start(0).u8_array(2 * bytes))
-                .toEqual(test_arrays_1[little_endian].concat(test_arrays_2[little_endian]));
         }
     });
 }
+
+test_integer_read('u8');
+test_integer_read('u16');
+test_integer_read('u32');
+test_integer_read('i32');
 
 test('u8_array', () => {
     const cursor = new ArrayBufferCursor(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]).buffer, true);
@@ -103,7 +105,7 @@ test('string_utf_16', () => {
 
 function test_integer_write(method_name: string) {
     test(method_name, () => {
-        const bytes = parseInt(method_name.replace(/^write_[iu](\d+)$/, '$1')) / 8;
+        const bytes = parseInt(method_name.replace(/^write_[iu](\d+)$/, '$1'), 10) / 8;
         let test_number_1 = 0;
         let test_number_2 = 0;
         // The "false" arrays are for big endian tests and the "true" arrays for little endian tests.
