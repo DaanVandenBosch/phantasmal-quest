@@ -1,7 +1,7 @@
 // @flow
-import { ArrayBufferCursor } from './parsing/ArrayBufferCursor';
+import { ArrayBufferCursor } from './data/ArrayBufferCursor';
 import { application_state } from './store';
-import { parse_quest } from './parsing/quest';
+import { parse_quest } from './data/parsing/quest';
 import { get_area_sections } from './area-data';
 import { create_object_geometry, create_npc_geometry } from './rendering/entities';
 

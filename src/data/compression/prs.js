@@ -1,5 +1,5 @@
 // @flow
-import { ArrayBufferCursor } from './ArrayBufferCursor';
+import { ArrayBufferCursor } from '../ArrayBufferCursor';
 
 class Context {
     src: ArrayBufferCursor;
@@ -9,7 +9,7 @@ class Context {
 
     constructor(cursor: ArrayBufferCursor) {
         this.src = cursor;
-        this.dst = new ArrayBufferCursor(4 * cursor.size, true);
+        this.dst = new ArrayBufferCursor(4 * cursor.size, cursor.little_endian);
         this.flags = 0;
         this.bit_pos = 0;
     }

@@ -12,6 +12,13 @@ export class Vec3 {
         this.y = y || 0;
         this.z = z || 0;
     }
+
+    add(v): Vec3 {
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
+        return this;
+    }
 };
 
 export { NpcType } from './NpcType';

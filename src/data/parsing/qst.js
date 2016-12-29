@@ -1,13 +1,16 @@
 // @flow
-import { ArrayBufferCursor } from './ArrayBufferCursor';
-import * as prs from './prs';
-import { parse_dat } from './dat';
-import { parse_bin } from './bin';
+import { ArrayBufferCursor } from '../ArrayBufferCursor';
+
+type ParseQstResult = {
+    version: string;
+    dat_data: ArrayBufferCursor; // PRS-compressed .dat data
+    bin_data: ArrayBufferCursor; // PRS-compressed .bin data
+};
 
 /**
  * Low level parsing function for .qst files.
  */
-export function parse_qst(cursor: ArrayBufferCursor) {
+export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult {
     // Read headers.
     // A .qst file contains two 88-byte headers that describe the embedded .dat and .bin files.
     let version = 'PC';
@@ -62,8 +65,8 @@ export function parse_qst(cursor: ArrayBufferCursor) {
 
     return {
         version,
-        dat: parse_dat(prs.decompress(dat_data)),
-        bin: parse_bin(prs.decompress(bin_data))
+        dat_data,
+        bin_data
     };
 }
 
@@ -76,24 +79,25 @@ function extract_file_data(cursor, dat_size, bin_size) {
     while (cursor.position < cursor.size) {
         const start_position = cursor.position;
         const file_name = cursor.seek(8).string_ascii(16, true, true);
-        const size = cursor.seek(1024).u32();
+        let size = cursor.seek(1024).u32();
         cursor.seek(-1028);
 
-        if (size <= 1024) {
-            if (file_name.endsWith('.dat')) {
-                const data = cursor.take(size);
-                dat_data.write_cursor(data);
-                cursor.seek(1028 - data.size);
-            } else if (file_name.endsWith('.bin')) {
-                const data = cursor.take(size);
-                bin_data.write_cursor(data);
-                cursor.seek(1028 - data.size);
-            } else {
-                console.warn(`Chunk for file "${file_name}" has unexpected extension.`);
-                cursor.seek(1028);
-            }
+        if (size > 1024) {
+            console.warn(`Data segment size of ${size} is larger than expected maximum size, truncating to 1024.`);
+            size = 1024;
+        }
+
+        if (file_name.endsWith('.dat')) {
+            const data = cursor.take(size);
+            dat_data.write_cursor(data);
+            cursor.seek(1028 - data.size);
+        } else if (file_name.endsWith('.bin')) {
+            const data = cursor.take(size);
+            bin_data.write_cursor(data);
+            cursor.seek(1028 - data.size);
         } else {
-            console.warn(`Data segment size of ${size} is larger than expected maximum size of 1024.`);
+            console.warn(`Chunk for file "${file_name}" has unexpected extension.`);
+            cursor.seek(1028);
         }
 
         cursor.seek(4);

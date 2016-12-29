@@ -13,7 +13,7 @@ import {
     TriangleStripDrawMode,
     Vector3
 } from 'three';
-import { Vec3, Section } from '../domain';
+import { Vec3, Section } from '../../domain';
 
 export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
     const dv = new DataView(array_buffer);
@@ -22,47 +22,47 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
     const material = new MultiMaterial([
         // Wall
         new MeshBasicMaterial({
-            color: 0xA0A0A0,
+            color: 0x80C0D0,
             transparent: true,
             opacity: 0.25
         }),
         // Ground
         new MeshLambertMaterial({
-            color: 0x707070,
+            color: 0x5090A0,
             side: DoubleSide
         }),
         // Vegetation
         new MeshLambertMaterial({
-            color: 0x607050,
+            color: 0x509050,
             side: DoubleSide
         }),
         // Section transition zone
         new MeshLambertMaterial({
-            color: 0x406080,
+            color: 0x604080,
             side: DoubleSide
         })
     ]);
     const wireframe_material = new MultiMaterial([
         // Wall
         new MeshBasicMaterial({
-            color: 0xA0A0A0,
+            color: 0x90D0E0,
             wireframe: true,
             transparent: true,
             opacity: 0.3,
         }),
         // Ground
         new MeshBasicMaterial({
-            color: 0x808080,
+            color: 0x60A0B0,
             wireframe: true
         }),
         // Vegetation
         new MeshBasicMaterial({
-            color: 0x708060,
+            color: 0x60A060,
             wireframe: true
         }),
         // Section transition zone
         new MeshBasicMaterial({
-            color: 0x507090,
+            color: 0x705090,
             wireframe: true
         })
     ]);

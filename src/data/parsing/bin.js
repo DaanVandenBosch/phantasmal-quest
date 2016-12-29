@@ -2,7 +2,7 @@
 /*eslint no-labels: ["off"]*/
 /*eslint no-restricted-syntax: ["off"]*/
 /*eslint no-use-before-define: ["off"]*/
-import { ArrayBufferCursor } from './ArrayBufferCursor';
+import { ArrayBufferCursor } from '../ArrayBufferCursor';
 
 export function parse_bin(cursor: ArrayBufferCursor) {
     const script_offset = cursor.u32();
@@ -173,8 +173,7 @@ function parse_instruction_arguments(cursor: ArrayBufferCursor, mask: string | n
                 break;
 
             default:
-                console.warn(`Unknown mask part ${mask.charAt(i)}.`);
-                break;
+                throw new Error(`Unknown mask part ${mask.charAt(i)}.`);
         }
     }
 

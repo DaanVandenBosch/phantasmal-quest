@@ -31,11 +31,8 @@ function create_geometry(
 
     if (section) {
         const {x: sec_x, y: sec_y, z: sec_z} = section.position;
-        const sin_section_rotation = Math.sin(section.y_axis_rotation);
-        const cos_section_rotation = Math.cos(section.y_axis_rotation);
-
-        const rot_x = cos_section_rotation * x + sin_section_rotation * z;
-        const rot_z = -sin_section_rotation * x + cos_section_rotation * z;
+        const rot_x = section.cos_y_axis_rotation * x + section.sin_y_axis_rotation * z;
+        const rot_z = -section.sin_y_axis_rotation * x + section.cos_y_axis_rotation * z;
         x = rot_x + sec_x;
         y += sec_y;
         z = rot_z + sec_z;

@@ -1,8 +1,8 @@
 // @flow
 import { Object3D } from 'three';
-import { Section } from 'domain';
+import { Section } from './domain';
 import { get_area_render_data, get_area_collision_data } from './assets';
-import { parse_c_rel, parse_n_rel } from './parsing/geometry';
+import { parse_c_rel, parse_n_rel } from './data/parsing/geometry';
 
 /*
  * Caches

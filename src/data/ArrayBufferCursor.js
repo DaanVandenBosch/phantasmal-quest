@@ -1,7 +1,9 @@
 // @flow
-const ASCII_DECODER = window.TextDecoder && new TextDecoder('ascii');
-const UTF_16BE_DECODER = window.TextDecoder && new TextDecoder('utf-16be');
-const UTF_16LE_DECODER = window.TextDecoder && new TextDecoder('utf-16le');
+import { TextDecoder } from 'text-encoding';
+
+const ASCII_DECODER = new TextDecoder('ascii');
+const UTF_16BE_DECODER = new TextDecoder('utf-16be');
+const UTF_16LE_DECODER = new TextDecoder('utf-16le');
 
 /**
  * A cursor for reading and writing binary data. Uses an ArrayBuffer internally.
@@ -72,14 +74,6 @@ export class ArrayBufferCursor {
     }
 
     /**
-     * Returns a view of the underlying buffer. It is recommended to only use this buffer after you are done writing to the cursor.
-     * This view will reflect writes to the cursor and vice versa until a cursor write that requires allocating a new internal buffer happens.
-     */
-    get buffer(): ArrayBuffer {
-        return this._buffer.slice(0, this.size);
-    }
-
-    /**
      * Seek forward or backward by a number of bytes.
      * 
      * @param offset - if positive, seeks forward by offset bytes, otherwise seeks backward by -offset bytes.
@@ -91,7 +85,7 @@ export class ArrayBufferCursor {
     /**
      * Seek forward from the start of the cursor by a number of bytes.
      * 
-     * @param {number} offset - greater or equal to 0 and smaller than size
+     * @param offset - greater or equal to 0 and smaller than size
      */
     seek_start(offset: number) {
         if (offset < 0 || offset > this.size) {
@@ -151,12 +145,21 @@ export class ArrayBufferCursor {
     }
 
     /**
-     * Reads an unsigned 32-bit floating point number and increments position by 4.
+     * Reads a 32-bit floating point number and increments position by 4.
      */
     f32() {
         const r = this._dv.getFloat32(this.position, this.little_endian);
         this.position += 4;
         return r;
+    }
+
+    /**
+     * Reads n unsigned 8-bit integers and increments position by n.
+     */
+    u8_array(n: number): number[] {
+        const array = [];
+        for (let i = 0; i < n; ++i) array.push(this._dv.getUint8(this.position++));
+        return array;
     }
 
     /**
@@ -179,13 +182,13 @@ export class ArrayBufferCursor {
      * Consumes up to max_byte_length bytes.
      */
     string_ascii(max_byte_length: number, null_terminated: boolean, drop_remaining: boolean) {
-        const string_end = null_terminated
-            ? this._index_of_u8(0, max_byte_length)
-            : this.position + max_byte_length;
+        const string_length = null_terminated
+            ? this._index_of_u8(0, max_byte_length) - this.position
+            : max_byte_length;
 
         const r = ASCII_DECODER.decode(
-            (this._buffer.slice(this.position, string_end): any));
-        this.position = drop_remaining ? this.position + max_byte_length : string_end;
+            new DataView(this._buffer, this.position, string_length));
+        this.position += drop_remaining ? max_byte_length : string_length;
         return r;
     }
 
@@ -193,13 +196,13 @@ export class ArrayBufferCursor {
      * Consumes up to max_byte_length bytes.
      */
     string_utf_16(max_byte_length: number, null_terminated: boolean, drop_remaining: boolean) {
-        const string_end = null_terminated
-            ? this._index_of_u16(0, max_byte_length)
-            : Math.floor((this.position + max_byte_length) / 2) * 2;
+        const string_length = null_terminated
+            ? this._index_of_u16(0, max_byte_length) - this.position
+            : Math.floor(max_byte_length / 2) * 2;
 
         const r = this._utf_16_decoder.decode(
-            (this._buffer.slice(this.position, string_end): any));
-        this.position = drop_remaining ? this.position + max_byte_length : string_end;
+            new DataView(this._buffer, this.position, string_length));
+        this.position += drop_remaining ? max_byte_length : string_length;
         return r;
     }
 
@@ -219,12 +222,76 @@ export class ArrayBufferCursor {
     }
 
     /**
+     * Writes an unsigned 16-bit integer and increments position by 2. If necessary, grows the cursor and reallocates the underlying buffer.
+     */
+    write_u16(value: number) {
+        this._ensure_capacity(this.position + 2);
+
+        this._dv.setUint16(this.position, value, this.little_endian);
+        this.position += 2;
+
+        if (this.position > this.size) {
+            this.size = this.position;
+        }
+
+        return this;
+    }
+
+    /**
+     * Writes an unsigned 32-bit integer and increments position by 4. If necessary, grows the cursor and reallocates the underlying buffer.
+     */
+    write_u32(value: number) {
+        this._ensure_capacity(this.position + 4);
+
+        this._dv.setUint32(this.position, value, this.little_endian);
+        this.position += 4;
+
+        if (this.position > this.size) {
+            this.size = this.position;
+        }
+
+        return this;
+    }
+
+    /**
+     * Writes a 32-bit floating point number and increments position by 4. If necessary, grows the cursor and reallocates the underlying buffer.
+     */
+    write_f32(value: number) {
+        this._ensure_capacity(this.position + 4);
+
+        this._dv.setFloat32(this.position, value, this.little_endian);
+        this.position += 4;
+
+        if (this.position > this.size) {
+            this.size = this.position;
+        }
+
+        return this;
+    }
+
+    /**
+     * Writes an array of unsigned 8-bit integers and increments position by the array's length. If necessary, grows the cursor and reallocates the underlying buffer.
+     */
+    write_u8_array(array: number[]) {
+        this._ensure_capacity(this.position + array.length);
+
+        new Uint8Array(this._buffer, this.position).set(new Uint8Array(array));
+        this.position += array.length;
+
+        if (this.position > this.size) {
+            this.size = this.position;
+        }
+
+        return this;
+    }
+
+    /**
      * Writes the contents of other and increments position by the size of other. If necessary, grows the cursor and reallocates the underlying buffer.
      */
     write_cursor(other: ArrayBufferCursor) {
         this._ensure_capacity(this.position + other.size);
 
-        new Uint8Array(this._buffer, this.position).set(new Uint8Array(other.buffer));
+        new Uint8Array(this._buffer, this.position).set(new Uint8Array(other._buffer));
         this.position += other.size;
 
         if (this.position > this.size) {
