@@ -6,7 +6,8 @@ const UTF_16BE_DECODER = new TextDecoder('utf-16be');
 const UTF_16LE_DECODER = new TextDecoder('utf-16le');
 
 /**
- * A cursor for reading and writing binary data. Uses an ArrayBuffer internally.
+ * A cursor for reading and writing binary data.
+ * Uses an ArrayBuffer internally. This buffer is reallocated if and only if a write beyond the current capacity happens.
  */
 export class ArrayBufferCursor {
     //
@@ -27,6 +28,20 @@ export class ArrayBufferCursor {
      * Byte order mode.
      */
     little_endian: boolean;
+
+    /**
+     * The amount of bytes left to read from the current position onward.
+     */
+    get bytes_left(): number {
+        return this.size - this.position;
+    }
+
+    /**
+     * The size of the underlying buffer. This value will always be equal to or greater than the cursor's size.
+     */
+    get capacity(): number {
+        return this._buffer.byteLength;
+    }
 
     //
     // Private properties
@@ -58,20 +73,6 @@ export class ArrayBufferCursor {
     //
     // Public methods
     //
-
-    /**
-     * The amount of bytes left to read from the current position onward.
-     */
-    get bytes_left(): number {
-        return this.size - this.position;
-    }
-
-    /**
-     * The size of the underlying buffer. This value will always be equal to or greater than the cursor's size.
-     */
-    get capacity(): number {
-        return this._buffer.byteLength;
-    }
 
     /**
      * Seek forward or backward by a number of bytes.
@@ -303,6 +304,13 @@ export class ArrayBufferCursor {
         }
 
         return this;
+    }
+
+    /**
+     * @returns a Uint8Array that remains a write-through view of the underlying array buffer until the buffer is reallocated.
+     */
+    uint8_array_view(): Uint8Array {
+        return new Uint8Array(this._buffer, 0, this.size);
     }
 
     //
