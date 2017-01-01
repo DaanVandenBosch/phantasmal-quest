@@ -1,9 +1,13 @@
 // @flow
-import { TextDecoder } from 'text-encoding';
+import { TextDecoder, TextEncoder } from 'text-encoding';
 
 const ASCII_DECODER = new TextDecoder('ascii');
 const UTF_16BE_DECODER = new TextDecoder('utf-16be');
 const UTF_16LE_DECODER = new TextDecoder('utf-16le');
+
+const ASCII_ENCODER = new TextEncoder('ascii');
+const UTF_16BE_ENCODER = new TextEncoder('utf-16be');
+const UTF_16LE_ENCODER = new TextEncoder('utf-16le');
 
 /**
  * A cursor for reading and writing binary data.
@@ -50,6 +54,7 @@ export class ArrayBufferCursor {
     _buffer: ArrayBuffer;
     _dv: DataView;
     _utf_16_decoder: TextDecoder;
+    _utf_16_encoder: TextEncoder;
 
     /**
      * @param buffer_or_capacity - If an ArrayBuffer is given, writes to the cursor will be reflected in this array buffer and vice versa until a cursor write that requires allocating a new internal buffer happens
@@ -68,6 +73,7 @@ export class ArrayBufferCursor {
         this.position = 0;
         this._dv = new DataView(this._buffer);
         this._utf_16_decoder = little_endian ? UTF_16LE_DECODER : UTF_16BE_DECODER;
+        this._utf_16_encoder = little_endian ? UTF_16LE_ENCODER : UTF_16BE_ENCODER;
     }
 
     //
@@ -304,6 +310,22 @@ export class ArrayBufferCursor {
         }
 
         return this;
+    }
+
+    write_string_ascii(str: string, byte_length: number) {
+        let i = 0;
+
+        for (const byte of ASCII_ENCODER.encode(str)) {
+            if (i < byte_length) {
+                this.write_u8(byte);
+                ++i;
+            }
+        }
+
+        while (i < byte_length) {
+            this.write_u8(0);
+            ++i;
+        }
     }
 
     /**

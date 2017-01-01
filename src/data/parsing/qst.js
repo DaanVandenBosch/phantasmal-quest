@@ -34,13 +34,18 @@ export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult {
         version = 'Dreamcast download';
     }
 
+    console.log(version)
+
     cursor.seek_start(0);
 
     for (let i = 0; i < 2; ++i) {
-        cursor.seek(44);
+        // cursor.seek(44);
+        console.log(cursor.u8_array(44));
         const file_name = cursor.string_ascii(16, true, true);
         const size = cursor.u32();
-        cursor.seek(24);
+        // cursor.seek(24);
+        console.log(file_name)
+        console.log(cursor.string_ascii(24, true, true));
 
         if (file_name.endsWith('.dat')) {
             dat_file_name = file_name;
@@ -70,13 +75,18 @@ export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult {
     };
 }
 
+export function write_qst({dat_data, bin_data}, base_file_name: string) {
+    // TODO
+    // write_file_data()
+}
+
 function extract_file_data(cursor, dat_size, bin_size) {
     // .dat and .bin files are interleaved in 1056 byte chunks.
     // Each chunk has a 24 byte header, 1024 data segment and an 8 byte trailer.
     let dat_data = new ArrayBufferCursor(dat_size, true);
     let bin_data = new ArrayBufferCursor(bin_size, true);
 
-    while (cursor.position < cursor.size) {
+    while (cursor.bytes_left) {
         const start_position = cursor.position;
         const file_name = cursor.seek(8).string_ascii(16, true, true);
         let size = cursor.seek(1024).u32();
@@ -119,4 +129,42 @@ function extract_file_data(cursor, dat_size, bin_size) {
     bin_data.seek_start(0);
 
     return { dat_data, bin_data };
+}
+
+function write_file_data(
+    cursor: ArrayBufferCursor,
+    dat_name: string,
+    bin_name: string,
+    dat_data: ArrayBufferCursor,
+    bin_data: ArrayBufferCursor
+) {
+    // .dat and .bin files are interleaved in 1056 byte chunks.
+    // Each chunk has a 24 byte header, 1024 data segment and an 8 byte trailer.
+    let dat_chunk_no = 0;
+    let bin_chunk_no = 0;
+
+    while (dat_data.bytes_left || bin_data.bytes_left) {
+        write_file_chunk(cursor, dat_data, dat_chunk_no++, dat_name);
+        write_file_chunk(cursor, bin_data, bin_chunk_no++, bin_name);
+    }
+}
+
+function write_file_chunk(
+    cursor: ArrayBufferCursor,
+    data: ArrayBufferCursor,
+    chunk_no: number,
+    name: string
+) {
+    if (data.bytes_left) {
+        cursor.write_u8_array([28, 4, 19, 0]);
+        cursor.write_u8(chunk_no);
+        cursor.write_u8_array([0, 0, 0]);
+        cursor.write_string_ascii(name, 16);
+
+        const size = Math.min(1024, data.bytes_left);
+        cursor.write_cursor(data.take(size));
+
+        cursor.write_u32(size);
+        cursor.write_u32(0);
+    }
 }

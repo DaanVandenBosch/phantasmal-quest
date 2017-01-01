@@ -8,7 +8,7 @@ import { parse_dat, write_dat } from './dat';
  * Parse a file, convert the resulting structure to DAT again and check whether the end result is equal to the original.
  */
 test('parse_dat and write_dat', () => {
-    const orig_buffer = fs.readFileSync('./test/resources/quest118_e.dat').buffer;
+    const orig_buffer = fs.readFileSync('test/resources/quest118_e.dat').buffer;
     const orig_dat = prs.decompress(new ArrayBufferCursor(orig_buffer, true));
     const test_dat = write_dat(parse_dat(orig_dat));
     orig_dat.seek_start(0);
