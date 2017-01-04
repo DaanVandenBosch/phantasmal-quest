@@ -22,9 +22,20 @@ import { area_store } from '../../store';
  * Always delegates to parse_qst at the moment.
  */
 export function parse_quest(cursor: ArrayBufferCursor): Quest {
-    const {dat_data, bin_data} = parse_qst(cursor);
-    const dat = parse_dat(prs.decompress(dat_data));
-    const bin = parse_bin(prs.decompress(bin_data));
+    let dat_file = null;
+    let bin_file = null;
+
+    for (const file of parse_qst(cursor).files) {
+        if (file.name.endsWith('.dat')) {
+            dat_file = file;
+        } else if (file.name.endsWith('.bin')) {
+            bin_file = file;
+        }
+    }
+
+    // TODO: deal with missing/multiple DAT or BIN file.
+    const dat = parse_dat(prs.decompress(dat_file.data));
+    const bin = parse_bin(prs.decompress(bin_file.data));
     let episode = 1;
     let area_variants = [];
 

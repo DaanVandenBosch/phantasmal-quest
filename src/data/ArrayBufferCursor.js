@@ -19,9 +19,20 @@ export class ArrayBufferCursor {
     //
 
     /**
-     * The cursor's size. This value will always be equal to or smaller than the cursor's capacity.
+     * The cursor's size. This value will always be non-negative and equal to or smaller than the cursor's capacity.
      */
-    size: number;
+    get size(): number {
+        return this._size;
+    }
+
+    set size(size: number): void {
+        if (size < 0) {
+            throw new Error('Size should be non-negative.')
+        }
+
+        this._ensure_capacity(size);
+        this._size = size;
+    }
 
     /**
      * The position from where bytes will be read or written.
@@ -51,6 +62,7 @@ export class ArrayBufferCursor {
     // Private properties
     //
 
+    _size: number;
     _buffer: ArrayBuffer;
     _dv: DataView;
     _utf_16_decoder: TextDecoder;
