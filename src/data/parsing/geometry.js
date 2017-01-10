@@ -28,12 +28,12 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
         }),
         // Ground
         new MeshLambertMaterial({
-            color: 0x5090A0,
+            color: 0x50D0D0,
             side: DoubleSide
         }),
         // Vegetation
         new MeshLambertMaterial({
-            color: 0x509050,
+            color: 0x50B070,
             side: DoubleSide
         }),
         // Section transition zone
@@ -52,12 +52,12 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
         }),
         // Ground
         new MeshBasicMaterial({
-            color: 0x60A0B0,
+            color: 0x60F0F0,
             wireframe: true
         }),
         // Vegetation
         new MeshBasicMaterial({
-            color: 0x60A060,
+            color: 0x60C080,
             wireframe: true
         }),
         // Section transition zone

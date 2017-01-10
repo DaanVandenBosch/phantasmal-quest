@@ -8,7 +8,7 @@ import { Object3D, Vector3 } from 'three';
 import { Vec3, QuestNpc, QuestObject, Section, NpcType, ObjectType } from '../domain';
 
 test('create geometry for quest objects', () => {
-    const object = new QuestObject(7, 13, new Vec3(17, 19, 23), ObjectType.PrincipalWarp);
+    const object = new QuestObject(7, 13, new Vec3(17, 19, 23), ObjectType.PrincipalWarp, null);
     const sect_rot = 0.6;
     const sect_rot_sin = Math.sin(sect_rot);
     const sect_rot_cos = Math.cos(sect_rot);
@@ -25,7 +25,7 @@ test('create geometry for quest objects', () => {
 });
 
 test('create geometry for quest NPCs', () => {
-    const npc = new QuestNpc(7, 13, new Vec3(17, 19, 23), NpcType.Booma);
+    const npc = new QuestNpc(7, 13, new Vec3(17, 19, 23), NpcType.Booma, null);
     const sect_rot = 0.6;
     const sect_rot_sin = Math.sin(sect_rot);
     const sect_rot_cos = Math.cos(sect_rot);
@@ -42,7 +42,7 @@ test('create geometry for quest NPCs', () => {
 });
 
 test('geometry position changes when entity position changes element-wise', () => {
-    const npc = new QuestNpc(7, 13, new Vec3(17, 19, 23), NpcType.Booma);
+    const npc = new QuestNpc(7, 13, new Vec3(17, 19, 23), NpcType.Booma, null);
     const geometry = create_npc_geometry(
         npc, [new Section(13, new Vec3(0, 0, 0), 0)]);
     npc.position = new Vec3(2, 3, 5).add(npc.position);
@@ -51,7 +51,7 @@ test('geometry position changes when entity position changes element-wise', () =
 });
 
 test('geometry position changes when entire entity position changes', () => {
-    const npc = new QuestNpc(7, 13, { x: 17, y: 19, z: 23 }, NpcType.Booma);
+    const npc = new QuestNpc(7, 13, { x: 17, y: 19, z: 23 }, NpcType.Booma, null);
     const geometry = create_npc_geometry(
         npc, [new Section(13, new Vec3(0, 0, 0), 0)]);
     npc.position = { x: 2, y: 3, z: 5 };

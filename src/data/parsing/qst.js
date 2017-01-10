@@ -3,6 +3,7 @@ import { ArrayBufferCursor } from '../ArrayBufferCursor';
 
 type QstContainedFile = {
     name: string;
+    name_2: string | null; // Unsure what this is
     quest_no: number | null;
     expected_size: number | null;
     data: ArrayBufferCursor;
@@ -18,7 +19,7 @@ type ParseQstResult = {
  * Low level parsing function for .qst files.
  * Can only read the Blue Burst format.
  */
-export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult {
+export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult | null {
     // A .qst file contains two 88-byte headers that describe the embedded .dat and .bin files.
     let version = 'PC';
 
@@ -37,23 +38,28 @@ export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult {
         version = 'Dreamcast download';
     }
 
-    // Read headers and contained files.
-    cursor.seek_start(0);
+    if (version === 'Blue Burst') {
+        // Read headers and contained files.
+        cursor.seek_start(0);
 
-    const headers = parse_headers(cursor);
+        const headers = parse_headers(cursor);
 
-    const files = parse_files(
-        cursor, new Map(headers.map(h => [h.file_name, h.size])));
+        const files = parse_files(
+            cursor, new Map(headers.map(h => [h.file_name, h.size])));
 
-    for (const file of files) {
-        const header = headers.find(h => h.file_name === file.name);
-        file.quest_no = header ? header.quest_no : null;
+        for (const file of files) {
+            const header = headers.find(h => h.file_name === file.name);
+            file.quest_no = header ? header.quest_no : null;
+            file.name_2 = header.file_name_2;
+        }
+
+        return {
+            version,
+            files
+        };
+    } else {
+        return null;
     }
-
-    return {
-        version,
-        files
-    };
 }
 
 type SimpleQstContainedFile = {
@@ -63,7 +69,7 @@ type SimpleQstContainedFile = {
 };
 
 type WriteQstParams = {
-    version: string;
+    version: ?string;
     files: SimpleQstContainedFile[];
 };
 
@@ -99,11 +105,13 @@ function parse_headers(cursor: ArrayBufferCursor): any[] {
         cursor.seek(38);
         const file_name = cursor.string_ascii(16, true, true);
         const size = cursor.u32();
-        cursor.seek(24);
+        // Not sure what this is:
+        const file_name_2 = cursor.string_ascii(24, true, true);
 
         files.push({
             quest_no,
             file_name,
+            file_name_2,
             size
         });
     }
@@ -119,19 +127,9 @@ function parse_files(cursor: ArrayBufferCursor, expected_sizes: Map<string, numb
     while (cursor.bytes_left) {
         const start_position = cursor.position;
 
-        // Read and validate meta data.
+        // Read meta data.
         const chunk_no = cursor.seek(4).u8();
         const file_name = cursor.seek(3).string_ascii(16, true, true);
-
-        if (chunk_no < 0) {
-            console.warn(`File chunk number ${chunk_no} of file ${file_name} is invalid, skipping.`);
-            continue;
-        }
-
-        if (chunk_no > 200) {
-            console.warn(`File chunk number ${chunk_no} of file ${file_name} is too large, skipping.`);
-            continue;
-        }
 
         let file = files.get(file_name);
 
@@ -209,11 +207,16 @@ function write_file_headers(cursor: ArrayBufferCursor, files: SimpleQstContained
         cursor.write_string_ascii(file.name, 16);
         cursor.write_u32(file.data.size);
 
-        const dot_pos = file.name.lastIndexOf('.');
-        const file_name_j = dot_pos === -1
-            ? file.name + '_j'
-            : file.name.slice(0, dot_pos) + '_j' + file.name.slice(dot_pos);
-        cursor.write_string_ascii(file_name_j, 24);
+        let file_name_2 = file.name_2;
+
+        if (file_name_2 === null || file_name_2 === undefined) {
+            const dot_pos = file.name.lastIndexOf('.');
+            file_name_2 = dot_pos === -1
+                ? file.name + '_j'
+                : file.name.slice(0, dot_pos) + '_j' + file.name.slice(dot_pos);
+        }
+
+        cursor.write_string_ascii(file_name_2, 24);
     }
 }
 

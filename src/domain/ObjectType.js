@@ -13,6 +13,7 @@ export class ObjectType {
         if (!name) throw new Error('name is required.');
 
         this.id = id;
+        this.pso_id = pso_id;
         this.name = name;
     }
 

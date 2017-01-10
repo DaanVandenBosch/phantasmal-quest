@@ -65,6 +65,7 @@ export class ArrayBufferCursor {
     _size: number;
     _buffer: ArrayBuffer;
     _dv: DataView;
+    _uint8_array: Uint8Array;
     _utf_16_decoder: TextDecoder;
     _utf_16_encoder: TextEncoder;
 
@@ -84,6 +85,7 @@ export class ArrayBufferCursor {
         this.little_endian = !!little_endian;
         this.position = 0;
         this._dv = new DataView(this._buffer);
+        this._uint8_array = new Uint8Array(this._buffer, 0, this.size);
         this._utf_16_decoder = little_endian ? UTF_16LE_DECODER : UTF_16BE_DECODER;
         this._utf_16_encoder = little_endian ? UTF_16LE_ENCODER : UTF_16BE_ENCODER;
     }
@@ -344,7 +346,7 @@ export class ArrayBufferCursor {
      * @returns a Uint8Array that remains a write-through view of the underlying array buffer until the buffer is reallocated.
      */
     uint8_array_view(): Uint8Array {
-        return new Uint8Array(this._buffer, 0, this.size);
+        return this._uint8_array;
     }
 
     //
@@ -390,6 +392,7 @@ export class ArrayBufferCursor {
             new Uint8Array(new_buffer).set(new Uint8Array(this._buffer, 0, this.size));
             this._buffer = new_buffer;
             this._dv = new DataView(this._buffer);
+            this._uint8_array = new Uint8Array(this._buffer, 0, min_new_size);
         }
     }
 }

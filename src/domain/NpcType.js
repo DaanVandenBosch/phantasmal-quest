@@ -112,8 +112,8 @@ export class NpcType {
     NpcType.Merillia = new NpcType(id++, 'Merillia', true);
     NpcType.Meriltas = new NpcType(id++, 'Meriltas', true);
     NpcType.Mericarol = new NpcType(id++, 'Mericarol', true);
-    NpcType.Merikle = new NpcType(id++, 'Merikle', true);
     NpcType.Mericus = new NpcType(id++, 'Mericus', true);
+    NpcType.Merikle = new NpcType(id++, 'Merikle', true);
     NpcType.UlGibbon = new NpcType(id++, 'Ul Gibbon', true);
     NpcType.ZolGibbon = new NpcType(id++, 'Zol Gibbon', true);
     NpcType.Gibbles = new NpcType(id++, 'Gibbles', true);

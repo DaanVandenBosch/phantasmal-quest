@@ -29,6 +29,14 @@ export class Section {
     @observable position: Vec3;
     @observable y_axis_rotation: number;
 
+    @computed get sin_y_axis_rotation() {
+        return Math.sin(this.y_axis_rotation);
+    }
+
+    @computed get cos_y_axis_rotation() {
+        return Math.cos(this.y_axis_rotation);
+    }
+
     constructor(
         id: number,
         position: Vec3,
@@ -43,80 +51,78 @@ export class Section {
         this.position = position;
         this.y_axis_rotation = y_axis_rotation;
     }
-
-    @computed get sin_y_axis_rotation() {
-        return Math.sin(this.y_axis_rotation);
-    }
-
-    @computed get cos_y_axis_rotation() {
-        return Math.cos(this.y_axis_rotation);
-    }
 }
 
 export class Quest {
     @observable name: string;
     @observable short_description: string;
     @observable long_description: string;
+    @observable quest_no: number;
     @observable episode: number;
     @observable area_variants: AreaVariant[];
     @observable objects: QuestObject[];
     @observable npcs: QuestNpc[];
+    /**
+     * (Partial) raw DAT data that can't be parsed yet by Phantasmal.
+     */
+    dat: any;
+    /**
+     * (Partial) raw BIN data that can't be parsed yet by Phantasmal.
+     */
+    bin: any;
 
     constructor(
         name: string,
         short_description: string,
         long_description: string,
+        quest_no: number,
         episode: number,
         area_variants: AreaVariant[],
         objects: QuestObject[],
-        npcs: QuestNpc[]
+        npcs: QuestNpc[],
+        dat: any,
+        bin: any
     ) {
+        if (!Number.isInteger(quest_no) || quest_no < 0) throw new Error('quest_no should be a non-negative integer.');
         if (episode !== 1 && episode !== 2 && episode !== 4) throw new Error('episode should be 1, 2 or 4.');
-        if (!objects) throw new Error('objs is required.');
-        if (!npcs) throw new Error('npcs is required.');
+        if (!objects || !(objects instanceof Array)) throw new Error('objs is required.');
+        if (!npcs || !(npcs instanceof Array)) throw new Error('npcs is required.');
 
         this.name = name;
         this.short_description = short_description;
         this.long_description = long_description;
+        this.quest_no = quest_no;
         this.episode = episode;
         this.area_variants = area_variants;
         this.objects = objects;
         this.npcs = npcs;
+        this.dat = dat;
+        this.bin = bin;
     }
 }
 
 export class VisibleQuestEntity {
+    //
+    // Public properties
+    //
+
     @observable area_id: number;
-    @observable section_id: number;
+
+    @computed get section_id(): number {
+        return this.section ? this.section.id : this._section_id;
+    }
+
     @observable section: ?Section = null;
+
     /**
      * World position
      */
     @observable position: Vec3;
-    object3d: ?Object3D = null;
-
-    constructor(
-        area_id: number,
-        section_id: number,
-        position: Vec3
-    ) {
-        if (Object.getPrototypeOf(this) === VisibleQuestEntity.prototype)
-            throw new Error('Abstract class should not be instantiated directly.');
-        if (!Number.isInteger(area_id) || area_id < 0)
-            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
-        if (!Number.isInteger(section_id) || section_id < 0)
-            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
-        if (!position) throw new Error('position is required.');
-
-        this.area_id = area_id;
-        this.section_id = section_id;
-        this.position = position;
-    }
 
     /**
      * Section-relative position
      */
-    @computed get section_position() {
+    @computed get section_position(): Vec3 {
         let {x, y, z} = this.position;
 
         if (this.section) {
@@ -134,39 +140,81 @@ export class VisibleQuestEntity {
 
         return new Vec3(x, y, z);
     }
+
+    object3d: ?Object3D = null;
+
+    //
+    // Public methods
+    //
+
+    constructor(
+        area_id: number,
+        section_id: number,
+        position: Vec3
+    ) {
+        if (Object.getPrototypeOf(this) === VisibleQuestEntity.prototype)
+            throw new Error('Abstract class should not be instantiated directly.');
+        if (!Number.isInteger(area_id) || area_id < 0)
+            throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
+        if (!Number.isInteger(section_id) || section_id < 0)
+            throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
+        if (!position) throw new Error('position is required.');
+
+        this.area_id = area_id;
+        this._section_id = section_id;
+        this.position = position;
+    }
+
+    //
+    // Private properties
+    //
+
+    _section_id: number;
 }
 
 export class QuestObject extends VisibleQuestEntity {
     @observable type: ObjectType;
+    /**
+     * The raw data from a DAT file.
+     */
+    dat: any;
 
     constructor(
         area_id: number,
         section_id: number,
         position: Vec3,
-        type: ObjectType
+        type: ObjectType,
+        dat: any
     ) {
         super(area_id, section_id, position);
 
         if (!type) throw new Error('type is required.');
 
         this.type = type;
+        this.dat = dat;
     }
 }
 
 export class QuestNpc extends VisibleQuestEntity {
     @observable type: NpcType;
+    /**
+     * The raw data from a DAT file.
+     */
+    dat: any;
 
     constructor(
         area_id: number,
         section_id: number,
         position: Vec3,
-        type: NpcType
+        type: NpcType,
+        dat: any
     ) {
         super(area_id, section_id, position);
 
         if (!type) throw new Error('type is required.');
 
         this.type = type;
+        this.dat = dat;
     }
 }
 

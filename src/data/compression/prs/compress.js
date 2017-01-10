@@ -294,7 +294,7 @@ class HashTable {
         return this.masked_offset_to_prev[offset & WINDOW_MASK];
     }
 
-    set_prev(offset: number, prev_offset: number | null): number | null {
-        return this.masked_offset_to_prev[offset & WINDOW_MASK] = prev_offset;
+    set_prev(offset: number, prev_offset: number | null): void {
+        this.masked_offset_to_prev[offset & WINDOW_MASK] = prev_offset;
     }
 }

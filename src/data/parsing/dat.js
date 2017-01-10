@@ -39,12 +39,10 @@ export function parse_dat(cursor: ArrayBufferCursor) {
 
                     objs.push({
                         type_id,
-                        unknown1,
                         section_id,
-                        unknown2,
                         position: { x, y, z },
-                        unknown3,
-                        area_id
+                        area_id,
+                        unknown: [unknown1, unknown2, unknown3]
                     });
                 }
 
@@ -66,24 +64,17 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     const x = cursor.f32();
                     const y = cursor.f32();
                     const z = cursor.f32();
-                    const unknown3 = cursor.u8_array(16);
-                    const flags = cursor.u32();
-                    const unknown4 = cursor.u8_array(12);
+                    const unknown3 = cursor.u8_array(32);
                     const skin = cursor.u32();
-                    const unknown5 = cursor.u8_array(4);
+                    const unknown4 = cursor.u8_array(4);
 
                     npcs.push({
                         type_id,
-                        unknown1,
                         section_id,
-                        unknown2,
                         position: { x, y, z },
-                        unknown3,
-                        flags,
-                        unknown4,
                         skin,
-                        unknown5,
-                        area_id
+                        area_id,
+                        unknown: [unknown1, unknown2, unknown3, unknown4]
                     });
                 }
 
@@ -119,22 +110,22 @@ export function write_dat({objs, npcs, unknowns}): ArrayBufferCursor {
         .sort((a, b) => a - b);
 
     for (const area_id of obj_area_ids) {
-        const objs = grouped_objs[area_id];
-        const entities_size = objs.length * OBJECT_SIZE;
+        const area_objs = grouped_objs[area_id];
+        const entities_size = area_objs.length * OBJECT_SIZE;
         cursor.write_u32(1); // Entity type
         cursor.write_u32(entities_size + 16);
         cursor.write_u32(area_id);
         cursor.write_u32(entities_size);
 
-        for (const obj of objs) {
+        for (const obj of area_objs) {
             cursor.write_u16(obj.type_id);
-            cursor.write_u8_array(obj.unknown1);
+            cursor.write_u8_array(obj.unknown[0]);
             cursor.write_u16(obj.section_id);
-            cursor.write_u8_array(obj.unknown2);
+            cursor.write_u8_array(obj.unknown[1]);
             cursor.write_f32(obj.position.x);
             cursor.write_f32(obj.position.y);
             cursor.write_f32(obj.position.z);
-            cursor.write_u8_array(obj.unknown3);
+            cursor.write_u8_array(obj.unknown[2]);
         }
     }
 
@@ -144,26 +135,24 @@ export function write_dat({objs, npcs, unknowns}): ArrayBufferCursor {
         .sort((a, b) => a - b);
 
     for (const area_id of npc_area_ids) {
-        const npcs = grouped_npcs[area_id];
-        const entities_size = npcs.length * NPC_SIZE;
+        const area_npcs = grouped_npcs[area_id];
+        const entities_size = area_npcs.length * NPC_SIZE;
         cursor.write_u32(2); // Entity type
         cursor.write_u32(entities_size + 16);
         cursor.write_u32(area_id);
         cursor.write_u32(entities_size);
 
-        for (const npc of npcs) {
+        for (const npc of area_npcs) {
             cursor.write_u16(npc.type_id);
-            cursor.write_u8_array(npc.unknown1);
+            cursor.write_u8_array(npc.unknown[0]);
             cursor.write_u16(npc.section_id);
-            cursor.write_u8_array(npc.unknown2);
+            cursor.write_u8_array(npc.unknown[1]);
             cursor.write_f32(npc.position.x);
             cursor.write_f32(npc.position.y);
             cursor.write_f32(npc.position.z);
-            cursor.write_u8_array(npc.unknown3);
-            cursor.write_u32(npc.flags);
-            cursor.write_u8_array(npc.unknown4);
+            cursor.write_u8_array(npc.unknown[2]);
             cursor.write_u32(npc.skin);
-            cursor.write_u8_array(npc.unknown5);
+            cursor.write_u8_array(npc.unknown[3]);
         }
     }
 
