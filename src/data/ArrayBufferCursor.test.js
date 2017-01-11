@@ -36,7 +36,7 @@ test('reallocation of internal buffer when necessary', () => {
 
     expect(cursor.size).toBe(4);
     expect(cursor.capacity).toBeGreaterThanOrEqual(4);
-    expect(cursor._buffer.byteLength).toBeGreaterThanOrEqual(4);
+    expect(cursor.buffer.byteLength).toBeGreaterThanOrEqual(4);
 });
 
 function test_integer_read(method_name: string) {
@@ -199,7 +199,7 @@ test('write_u8_array', () => {
     for (const little_endian of [false, true]) {
         const bytes = 10;
         const cursor = new ArrayBufferCursor(2 * bytes, little_endian);
-        const uint8_array = new Uint8Array(cursor._buffer);
+        const uint8_array = new Uint8Array(cursor.buffer);
         const test_array_1 = [];
         const test_array_2 = [];
 

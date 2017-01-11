@@ -13,6 +13,144 @@ export class NpcType {
         this.name = name;
         this.enemy = enemy;
     }
+
+    static Unknown: NpcType;
+
+    static FemaleFat: NpcType;
+    static FemaleMacho: NpcType;
+    static FemaleTall: NpcType;
+    static MaleDwarf: NpcType;
+    static MaleFat: NpcType;
+    static MaleMacho: NpcType;
+    static MaleOld: NpcType;
+    static BlueSoldier: NpcType;
+    static RedSoldier: NpcType;
+    static Principal: NpcType;
+    static Tekker: NpcType;
+    static GuildLady: NpcType;
+    static Scientist: NpcType;
+    static Nurse: NpcType;
+    static Irene: NpcType;
+
+    static Hildebear: NpcType;
+    static Hildeblue: NpcType;
+    static RagRappy: NpcType;
+    static AlRappy: NpcType;
+    static Monest: NpcType;
+    static SavageWolf: NpcType;
+    static BarbarousWolf: NpcType;
+    static Booma: NpcType;
+    static Gobooma: NpcType;
+    static Gigobooma: NpcType;
+    static Dragon: NpcType;
+
+    static GrassAssassin: NpcType;
+    static PoisonLily: NpcType;
+    static NarLily: NpcType;
+    static NanoDragon: NpcType;
+    static EvilShark: NpcType;
+    static PalShark: NpcType;
+    static GuilShark: NpcType;
+    static PofuillySlime: NpcType;
+    static PouillySlime: NpcType;
+    static PanArms: NpcType;
+    static DeRolLe: NpcType;
+
+    static Dubchic: NpcType;
+    static Gilchic: NpcType;
+    static Garanz: NpcType;
+    static SinowBeat: NpcType;
+    static SinowGold: NpcType;
+    static Canadine: NpcType;
+    static Canane: NpcType;
+    static Dubswitch: NpcType;
+    static VolOpt: NpcType;
+
+    static Delsaber: NpcType;
+    static ChaosSorcerer: NpcType;
+    static DarkGunner: NpcType;
+    static ChaosBringer: NpcType;
+    static DarkBelra: NpcType;
+    static Dimenian: NpcType;
+    static LaDimenian: NpcType;
+    static SoDimenian: NpcType;
+    static Bulclaw: NpcType;
+    static Claw: NpcType;
+    static DarkFalz: NpcType;
+
+    static Hildebear2: NpcType;
+    static Hildeblue2: NpcType;
+    static RagRappy2: NpcType;
+    static LoveRappy: NpcType;
+    static Monest2: NpcType;
+    static PoisonLily2: NpcType;
+    static NarLily2: NpcType;
+    static GrassAssassin2: NpcType;
+    static Dimenian2: NpcType;
+    static LaDimenian2: NpcType;
+    static SoDimenian2: NpcType;
+    static DarkBelra2: NpcType;
+    static BarbaRay: NpcType;
+
+    static SavageWolf2: NpcType;
+    static BarbarousWolf2: NpcType;
+    static PanArms2: NpcType;
+    static Dubchic2: NpcType;
+    static Gilchic2: NpcType;
+    static Garanz2: NpcType;
+    static Dubswitch2: NpcType;
+    static Delsaber2: NpcType;
+    static ChaosSorcerer2: NpcType;
+    static GolDragon: NpcType;
+
+    static SinowBerill: NpcType;
+    static SinowSpigell: NpcType;
+    static Merillia: NpcType;
+    static Meriltas: NpcType;
+    static Mericarol: NpcType;
+    static Mericus: NpcType;
+    static Merikle: NpcType;
+    static UlGibbon: NpcType;
+    static ZolGibbon: NpcType;
+    static Gibbles: NpcType;
+    static Gee: NpcType;
+    static GiGue: NpcType;
+    static GalGryphon: NpcType;
+
+    static Deldepth: NpcType;
+    static Delbiter: NpcType;
+    static Dolmolm: NpcType;
+    static Dolmdarl: NpcType;
+    static Morfos: NpcType;
+    static Recobox: NpcType;
+    static Epsilon: NpcType;
+    static SinowZoa: NpcType;
+    static SinowZele: NpcType;
+    static IllGill: NpcType;
+    static DelLily: NpcType;
+    static OlgaFlow: NpcType;
+
+    static SandRappy: NpcType;
+    static DelRappy: NpcType;
+    static Astark: NpcType;
+    static SatelliteLizard: NpcType;
+    static Yowie: NpcType;
+    static MerissaA: NpcType;
+    static MerissaAA: NpcType;
+    static Girtablulu: NpcType;
+    static Zu: NpcType;
+    static Pazuzu: NpcType;
+    static Boota: NpcType;
+    static ZeBoota: NpcType;
+    static BaBoota: NpcType;
+    static Dorphon: NpcType;
+    static DorphonEclair: NpcType;
+    static Goran: NpcType;
+    static PyroGoran: NpcType;
+    static GoranDetonator: NpcType;
+    static SaintMillion: NpcType;
+    static Shambertin: NpcType;
+    static Kondrieu: NpcType;
 }
 
 (function () {

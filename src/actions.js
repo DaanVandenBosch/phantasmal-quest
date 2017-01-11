@@ -1,7 +1,7 @@
 // @flow
 import { ArrayBufferCursor } from './data/ArrayBufferCursor';
 import { application_state } from './store';
-import { parse_quest } from './data/parsing/quest';
+import { parse_quest, write_quest_qst } from './data/parsing/quest';
 import { get_area_sections } from './area-data';
 import { create_object_geometry, create_npc_geometry } from './rendering/entities';
 
@@ -55,5 +55,23 @@ export function current_area_id_changed(area_id: ?number) {
         const area_variant = application_state.current_quest.area_variants.find(
             variant => variant.area.id === area_id);
         application_state.current_area = (area_variant && area_variant.area) || null;
+    }
+}
+
+export function save_current_quest_to_file(file_name: string) {
+    if (application_state.current_quest) {
+        if (!file_name.endsWith('.qst')) {
+            file_name += '.qst';
+        }
+
+        const cursor = write_quest_qst(application_state.current_quest, file_name);
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([cursor.buffer]));
+        a.download = file_name;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(a.href);
+        document.body.removeChild(a);
     }
 }

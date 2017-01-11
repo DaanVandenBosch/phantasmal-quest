@@ -64,7 +64,8 @@ export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult | null {
 
 type SimpleQstContainedFile = {
     name: string;
-    quest_no: ?number;
+    name_2: ?string;
+    quest_no: number;
     data: ArrayBufferCursor;
 };
 

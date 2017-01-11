@@ -1,6 +1,6 @@
 // @flow
 import { observable } from 'mobx';
-import { Area, AreaVariant, Quest } from './domain';
+import { Area, AreaVariant, Quest, VisibleQuestEntity } from './domain';
 
 function area(id, name, order, variants) {
     const varis = Array(variants).fill().map((_, i) => new AreaVariant(i));
@@ -94,7 +94,7 @@ export const area_store = new AreaStore();
 class ApplicationState {
     @observable current_quest: ?Quest = null;
     @observable current_area: ?Area = null;
-    @observable selected_entity: any = null;
+    @observable selected_entity: ?VisibleQuestEntity = null;
 }
 
 export const application_state = new ApplicationState();

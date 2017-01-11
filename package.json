@@ -4,22 +4,26 @@
   "private": true,
   "homepage": "http://www.phantasmal.world/",
   "devDependencies": {
-    "custom-react-scripts": "0.0.21"
+    "custom-react-scripts": "^0.0.21",
+    "flow-bin": "^0.37.4"
   },
   "dependencies": {
-    "lodash": "4.17.3",
-    "mobx": "2.7.0",
-    "mobx-react": "4.0.3",
-    "react": "15.4.1",
-    "react-dom": "15.4.1",
-    "text-encoding": "0.6.1",
-    "three": "0.82.1",
-    "three-orbit-controls": "82.1.0"
+    "@blueprintjs/core": "^1.5.0",
+    "lodash": "^4.17.3",
+    "mobx": "^2.7.0",
+    "mobx-react": "^4.0.3",
+    "react": "^15.4.1",
+    "react-addons-css-transition-group": "^15.4.2",
+    "react-dom": "^15.4.1",
+    "text-encoding": "^0.6.1",
+    "three": "^0.82.1",
+    "three-orbit-controls": "^82.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "flow": "flow"
   }
 }

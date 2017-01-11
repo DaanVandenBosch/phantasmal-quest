@@ -62,7 +62,7 @@ export class QuestRenderer {
         this._controls = new OrbitControls(
             this._camera, this._renderer.domElement);
 
-        this._scene.background = new Color(0x080808);
+        this._scene.background = new Color(0x151C21);
         this._scene.add(new HemisphereLight(0xffffff, 0x505050, 1));
         this._scene.add(this._obj_geometry);
         this._scene.add(this._npc_geometry);

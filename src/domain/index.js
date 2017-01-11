@@ -1,6 +1,10 @@
 // @flow
 import { Object3D } from 'three';
 import { computed, observable } from 'mobx';
+import { NpcType } from './NpcType';
+export { NpcType } from './NpcType';
+import { ObjectType } from './ObjectType';
+export { ObjectType } from './ObjectType';
 
 export class Vec3 {
     x: number;
@@ -13,7 +17,7 @@ export class Vec3 {
         this.z = z || 0;
     }
 
-    add(v): Vec3 {
+    add(v: Vec3): Vec3 {
         this.x += v.x;
         this.y += v.y;
         this.z += v.z;
@@ -21,19 +25,16 @@ export class Vec3 {
     }
 };
 
-export { NpcType } from './NpcType';
-export { ObjectType } from './ObjectType';
-
 export class Section {
     id: number;
     @observable position: Vec3;
     @observable y_axis_rotation: number;
 
-    @computed get sin_y_axis_rotation() {
+    @computed get sin_y_axis_rotation(): number {
         return Math.sin(this.y_axis_rotation);
     }
 
-    @computed get cos_y_axis_rotation() {
+    @computed get cos_y_axis_rotation(): number {
         return Math.cos(this.y_axis_rotation);
     }
 
@@ -152,7 +153,7 @@ export class VisibleQuestEntity {
         section_id: number,
         position: Vec3
     ) {
-        if (Object.getPrototypeOf(this) === VisibleQuestEntity.prototype)
+        if (Object.getPrototypeOf(this) === Object.getPrototypeOf(VisibleQuestEntity))
             throw new Error('Abstract class should not be instantiated directly.');
         if (!Number.isInteger(area_id) || area_id < 0)
             throw new Error(`Expected area_id to be a non-negative integer, got ${area_id}.`);
@@ -239,7 +240,7 @@ export class Area {
 
 export class AreaVariant {
     id: number;
-    area: Area = null;
+    area: Area;
     @observable sections: Section[] = [];
 
     constructor(id: number) {

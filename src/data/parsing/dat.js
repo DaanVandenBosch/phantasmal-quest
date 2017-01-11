@@ -100,9 +100,11 @@ export function parse_dat(cursor: ArrayBufferCursor) {
     return { objs, npcs, unknowns };
 }
 
-export function write_dat({objs, npcs, unknowns}): ArrayBufferCursor {
+export function write_dat(
+    {objs, npcs, unknowns}: { objs: any[], npcs: any[], unknowns: any[] }
+): ArrayBufferCursor {
     const cursor = new ArrayBufferCursor(
-        objs.length * OBJECT_SIZE + npcs.length * NPC_SIZE + unknowns * 1000, true);
+        objs.length * OBJECT_SIZE + npcs.length * NPC_SIZE + unknowns.length * 1000, true);
 
     const grouped_objs = groupBy(objs, obj => obj.area_id);
     const obj_area_ids = Object.keys(grouped_objs)

@@ -1,8 +1,9 @@
 // @flow
 import React from 'react';
 import { observer } from 'mobx-react';
+import { Button, Dialog, Intent } from '@blueprintjs/core';
 import { application_state } from '../store';
-import { current_area_id_changed, load_file } from '../actions';
+import { current_area_id_changed, load_file, save_current_quest_to_file } from '../actions';
 import { Style } from './utils';
 import { Area3DComponent } from './Area3DComponent';
 import { EntityInfoComponent } from './EntityInfoComponent';
@@ -10,21 +11,31 @@ import { QuestInfoComponent } from './QuestInfoComponent';
 
 @observer
 export class ApplicationComponent extends React.Component {
+    state = {
+        filename: (null: string | null),
+        save_dialog_open: false,
+        save_dialog_filename: 'Untitled'
+    };
+
     _main_container_style = Object.assign(Style.fill(), {
         display: 'flex',
         flexDirection: 'column'
     });
-    _header_style = {
-        padding: '0 20px',
-        display: 'flex',
+    _heading_style = {
+        fontSize: '22px'
     };
-    _controls_style = {
-        flex: 1,
-        padding: '10px 30px',
-        alignSelf: 'center'
+    _beta_style = {
+        color: '#f55656',
+        fontWeight: 'bold',
+        marginLeft: 2
     };
-    _area_select = {
-        margin: '0 10px',
+    _file_upload_style = {
+        display: 'inline-block',
+        width: '100%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        wordWrap: 'normal'
     };
     _main_style = {
         flex: 1,
@@ -42,24 +53,44 @@ export class ApplicationComponent extends React.Component {
         const area_id = area && area.id;
 
         return (
-            <div style={this._main_container_style}>
-                <div style={this._header_style}>
-                    <h1>Phantasmal Quest Viewer</h1>
-                    <div style={this._controls_style}>
-                        <input
-                            type="file"
-                            accept=".qst"
-                            onChange={this._on_file_change} />
-                        {areas ? (
-                            <select
-                                style={this._area_select}
-                                onChange={this._on_area_select_change}
-                                defaultValue={area_id}>
-                                {areas.map(area =>
-                                    <option key={area.id} value={area.id}>{area.name}</option>)}
-                            </select>) : null}
+            <div className="pt-app pt-dark" style={this._main_container_style}>
+                <nav className="pt-navbar">
+                    <div className="pt-navbar-group">
+                        <div className="pt-navbar-heading" style={this._heading_style}>
+                            Phantasmal Quest Editor
+                            <sup style={this._beta_style}>BETA</sup>
+                        </div>
+                        <label className="pt-file-upload">
+                            <input
+                                type="file"
+                                accept=".qst"
+                                onChange={this._on_file_change} />
+                            <span className="pt-file-upload-input">
+                                <span style={this._file_upload_style}>
+                                    {this.state.filename || 'Choose file...'}
+                                </span>
+                            </span>
+                        </label>
+                        {areas
+                            ? (
+                                <div className="pt-select" style={{ marginLeft: 10 }}>
+                                    <select
+                                        onChange={this._on_area_select_change}
+                                        defaultValue={area_id}>
+                                        {areas.map(area =>
+                                            <option key={area.id} value={area.id}>{area.name}</option>)}
+                                    </select>
+                                </div>)
+                            : null}
+                        {quest
+                            ? <Button
+                                text="Save as..."
+                                iconName="floppy-disk"
+                                style={{ marginLeft: 10 }}
+                                onClick={this._on_save_as_click} />
+                            : null}
                     </div>
-                </div>
+                </nav>
                 <div style={this._main_style}>
                     <QuestInfoComponent
                         quest={quest} />
@@ -69,6 +100,36 @@ export class ApplicationComponent extends React.Component {
                         area={area} />
                     <EntityInfoComponent entity={application_state.selected_entity} />
                 </div>
+                <Dialog
+                    title="Save as..."
+                    iconName="floppy-disk"
+                    className="pt-dark"
+                    style={{ width: 360 }}
+                    isOpen={this.state.save_dialog_open}
+                    onClose={this._on_save_dialog_close}>
+                    <div className="pt-dialog-body">
+                        <label className="pt-label pt-inline">
+                            Name:
+                            <input
+                                autoFocus="true"
+                                className="pt-input"
+                                style={{ width: 200, margin: '0 10px 0 10px' }}
+                                value={this.state.save_dialog_filename}
+                                onChange={this._on_save_dialog_name_change}
+                                onKeyUp={this._on_save_dialog_name_key_up} />
+                            (.qst)
+                        </label>
+                    </div>
+                    <div className="pt-dialog-footer">
+                        <div className="pt-dialog-footer-actions">
+                            <Button
+                                text="Save"
+                                style={{ marginLeft: 10 }}
+                                onClick={this._on_save_dialog_save_click}
+                                intent={Intent.PRIMARY} />
+                        </div>
+                    </div>
+                </Dialog>
             </div>
         );
     }
@@ -78,6 +139,9 @@ export class ApplicationComponent extends React.Component {
             const file = e.currentTarget.files[0];
 
             if (file) {
+                this.setState({
+                    filename: file.name
+                });
                 load_file(file);
             }
         }
@@ -88,5 +152,45 @@ export class ApplicationComponent extends React.Component {
             const area_id = parseInt(e.currentTarget.value, 10);
             current_area_id_changed(area_id);
         }
+    }
+
+    _on_save_as_click = () => {
+        let name;
+
+        if (this.state.filename) {
+            if (this.state.filename.endsWith('.qst')) {
+                name = this.state.filename.slice(0, -4);
+            } else {
+                name = this.state.filename;
+            }
+        } else {
+            name = 'Untitled';
+        }
+
+        this.setState({
+            save_dialog_open: true,
+            save_dialog_filename: name
+        });
+    }
+
+    _on_save_dialog_name_change = (e: Event) => {
+        if (e.currentTarget instanceof HTMLInputElement) {
+            this.setState({ save_dialog_filename: e.currentTarget.value });
+        }
+    }
+
+    _on_save_dialog_name_key_up = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            this._on_save_dialog_save_click();
+        }
+    }
+
+    _on_save_dialog_save_click = () => {
+        save_current_quest_to_file(this.state.save_dialog_filename);
+        this.setState({ save_dialog_open: false });
+    }
+
+    _on_save_dialog_close = () => {
+        this.setState({ save_dialog_open: false });
     }
 }

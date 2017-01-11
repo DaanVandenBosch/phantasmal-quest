@@ -55,15 +55,16 @@ export class ArrayBufferCursor {
      * The size of the underlying buffer. This value will always be equal to or greater than the cursor's size.
      */
     get capacity(): number {
-        return this._buffer.byteLength;
+        return this.buffer.byteLength;
     }
+
+    buffer: ArrayBuffer;
 
     //
     // Private properties
     //
 
     _size: number;
-    _buffer: ArrayBuffer;
     _dv: DataView;
     _uint8_array: Uint8Array;
     _utf_16_decoder: TextDecoder;
@@ -75,17 +76,17 @@ export class ArrayBufferCursor {
      */
     constructor(buffer_or_capacity: ArrayBuffer | number, little_endian: ?boolean) {
         if (typeof buffer_or_capacity === 'number') {
-            this._buffer = new ArrayBuffer(buffer_or_capacity);
+            this.buffer = new ArrayBuffer(buffer_or_capacity);
             this.size = 0;
         } else {
-            this._buffer = buffer_or_capacity;
-            this.size = this._buffer.byteLength;
+            this.buffer = buffer_or_capacity;
+            this.size = this.buffer.byteLength;
         }
 
         this.little_endian = !!little_endian;
         this.position = 0;
-        this._dv = new DataView(this._buffer);
-        this._uint8_array = new Uint8Array(this._buffer, 0, this.size);
+        this._dv = new DataView(this.buffer);
+        this._uint8_array = new Uint8Array(this.buffer, 0, this.size);
         this._utf_16_decoder = little_endian ? UTF_16LE_DECODER : UTF_16BE_DECODER;
         this._utf_16_encoder = little_endian ? UTF_16LE_ENCODER : UTF_16BE_ENCODER;
     }
@@ -196,7 +197,7 @@ export class ArrayBufferCursor {
 
         this.position += size;
         return new ArrayBufferCursor(
-            this._buffer.slice(this.position - size, this.position), this.little_endian);
+            this.buffer.slice(this.position - size, this.position), this.little_endian);
     }
 
     /**
@@ -208,7 +209,7 @@ export class ArrayBufferCursor {
             : max_byte_length;
 
         const r = ASCII_DECODER.decode(
-            new DataView(this._buffer, this.position, string_length));
+            new DataView(this.buffer, this.position, string_length));
         this.position += drop_remaining
             ? max_byte_length
             : Math.min(string_length + 1, max_byte_length);
@@ -224,7 +225,7 @@ export class ArrayBufferCursor {
             : Math.floor(max_byte_length / 2) * 2;
 
         const r = this._utf_16_decoder.decode(
-            new DataView(this._buffer, this.position, string_length));
+            new DataView(this.buffer, this.position, string_length));
         this.position += drop_remaining
             ? max_byte_length
             : Math.min(string_length + 2, max_byte_length);
@@ -300,7 +301,7 @@ export class ArrayBufferCursor {
     write_u8_array(array: number[]) {
         this._ensure_capacity(this.position + array.length);
 
-        new Uint8Array(this._buffer, this.position).set(new Uint8Array(array));
+        new Uint8Array(this.buffer, this.position).set(new Uint8Array(array));
         this.position += array.length;
 
         if (this.position > this.size) {
@@ -316,7 +317,7 @@ export class ArrayBufferCursor {
     write_cursor(other: ArrayBufferCursor) {
         this._ensure_capacity(this.position + other.size);
 
-        new Uint8Array(this._buffer, this.position).set(new Uint8Array(other._buffer));
+        new Uint8Array(this.buffer, this.position).set(new Uint8Array(other.buffer));
         this.position += other.size;
 
         if (this.position > this.size) {
@@ -389,10 +390,10 @@ export class ArrayBufferCursor {
             } while (new_size < min_new_size);
 
             const new_buffer = new ArrayBuffer(new_size);
-            new Uint8Array(new_buffer).set(new Uint8Array(this._buffer, 0, this.size));
-            this._buffer = new_buffer;
-            this._dv = new DataView(this._buffer);
-            this._uint8_array = new Uint8Array(this._buffer, 0, min_new_size);
+            new Uint8Array(new_buffer).set(new Uint8Array(this.buffer, 0, this.size));
+            this.buffer = new_buffer;
+            this._dv = new DataView(this.buffer);
+            this._uint8_array = new Uint8Array(this.buffer, 0, min_new_size);
         }
     }
 }

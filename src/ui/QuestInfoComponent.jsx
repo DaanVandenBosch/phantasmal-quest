@@ -9,12 +9,18 @@ const container_style = {
 };
 
 const table_style = {
-    borderCollapse: 'collapse'
+    borderCollapse: 'collapse',
+    width: '100%'
+};
+
+const table_header_style = {
+    textAlign: 'right',
+    paddingRight: 5
 };
 
 const description_style = {
     whiteSpace: 'pre-wrap',
-    padding: '10px 0'
+    margin: '3px 0 3px 0'
 };
 
 const npc_counts_container_style = {
@@ -51,16 +57,20 @@ export function QuestInfoComponent({quest}: { quest: ?Quest }) {
                 <table style={table_style}>
                     <tbody>
                         <tr>
-                            <td>Name:</td><td>{quest.name}</td>
+                            <th style={table_header_style}>Name:</th><td>{quest.name}</td>
                         </tr>
                         <tr>
-                            <td>Episode:</td><td>{episode}</td>
+                            <th style={table_header_style}>Episode:</th><td>{episode}</td>
                         </tr>
                         <tr>
-                            <td colSpan="2" style={description_style}>{quest.short_description}</td>
+                            <td colSpan="2">
+                                <pre style={description_style}>{quest.short_description}</pre>
+                            </td>
                         </tr>
                         <tr>
-                            <td colSpan="2" style={description_style}>{quest.long_description}</td>
+                            <td colSpan="2">
+                                <pre style={description_style}>{quest.long_description}</pre>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
