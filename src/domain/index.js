@@ -58,7 +58,7 @@ export class Quest {
     @observable name: string;
     @observable short_description: string;
     @observable long_description: string;
-    @observable quest_no: number;
+    @observable quest_no: ?number;
     @observable episode: number;
     @observable area_variants: AreaVariant[];
     @observable objects: QuestObject[];
@@ -76,7 +76,7 @@ export class Quest {
         name: string,
         short_description: string,
         long_description: string,
-        quest_no: number,
+        quest_no: ?number,
         episode: number,
         area_variants: AreaVariant[],
         objects: QuestObject[],
@@ -84,7 +84,7 @@ export class Quest {
         dat: any,
         bin: any
     ) {
-        if (!Number.isInteger(quest_no) || quest_no < 0) throw new Error('quest_no should be a non-negative integer.');
+        if (quest_no != null && (!Number.isInteger(quest_no) || quest_no < 0)) throw new Error('quest_no should be null or a non-negative integer.');
         if (episode !== 1 && episode !== 2 && episode !== 4) throw new Error('episode should be 1, 2 or 4.');
         if (!objects || !(objects instanceof Array)) throw new Error('objs is required.');
         if (!npcs || !(npcs instanceof Array)) throw new Error('npcs is required.');

@@ -163,7 +163,7 @@ class Context {
             .seek_start(pos);
     }
 
-    write_eof(): number {
+    write_eof(): void {
         this.set_bit(0);
         this.set_bit(1);
 
@@ -250,7 +250,7 @@ class Context {
         }
 
         // Did we find a match?
-        const offset = longest_length > 0 ? longest_match - this.src.position : 0;
+        const offset = longest_length > 0 ? ((longest_match: any): number) - this.src.position : 0;
         return [offset, longest_length];
     }
 

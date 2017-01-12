@@ -4,8 +4,9 @@ import { application_state } from './store';
 import { parse_quest, write_quest_qst } from './data/parsing/quest';
 import { get_area_sections } from './area-data';
 import { create_object_geometry, create_npc_geometry } from './rendering/entities';
+import { VisibleQuestEntity } from './domain';
 
-export function entity_selected(entity: any) {
+export function entity_selected(entity: ?VisibleQuestEntity) {
     application_state.selected_entity = entity;
 }
 
@@ -15,31 +16,33 @@ export function load_file(file: File) {
     reader.addEventListener('loadend', () => {
         const quest = parse_quest(new ArrayBufferCursor(reader.result, true));
 
-        // Reset application state, then set current quest and area in the correct order.
-        // Might want to do this in a MobX transaction.
-        application_state.current_area = null;
-        application_state.selected_entity = null;
-        application_state.current_quest = quest;
+        if (quest) {
+            // Reset application state, then set current quest and area in the correct order.
+            // Might want to do this in a MobX transaction.
+            application_state.current_area = null;
+            application_state.selected_entity = null;
+            application_state.current_quest = quest;
 
-        if (quest.area_variants.length) {
-            application_state.current_area = quest.area_variants[0].area;
-        }
+            if (quest.area_variants.length) {
+                application_state.current_area = quest.area_variants[0].area;
+            }
 
-        // Load section data.
-        for (const variant of quest.area_variants) {
-            get_area_sections(quest.episode, variant.area.id, variant.id).then(sections => {
-                variant.sections = sections;
+            // Load section data.
+            for (const variant of quest.area_variants) {
+                get_area_sections(quest.episode, variant.area.id, variant.id).then(sections => {
+                    variant.sections = sections;
 
-                // Generate object geometry.
-                for (const object of quest.objects.filter(o => o.area_id === variant.area.id)) {
-                    object.object3d = create_object_geometry(object, sections);
-                }
+                    // Generate object geometry.
+                    for (const object of quest.objects.filter(o => o.area_id === variant.area.id)) {
+                        object.object3d = create_object_geometry(object, sections);
+                    }
 
-                // Generate NPC geometry.
-                for (const npc of quest.npcs.filter(npc => npc.area_id === variant.area.id)) {
-                    npc.object3d = create_npc_geometry(npc, sections);
-                }
-            });
+                    // Generate NPC geometry.
+                    for (const npc of quest.npcs.filter(npc => npc.area_id === variant.area.id)) {
+                        npc.object3d = create_npc_geometry(npc, sections);
+                    }
+                });
+            }
         }
     });
 
@@ -60,11 +63,11 @@ export function current_area_id_changed(area_id: ?number) {
 
 export function save_current_quest_to_file(file_name: string) {
     if (application_state.current_quest) {
+        const cursor = write_quest_qst(application_state.current_quest, file_name);
+
         if (!file_name.endsWith('.qst')) {
             file_name += '.qst';
         }
-
-        const cursor = write_quest_qst(application_state.current_quest, file_name);
 
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([cursor.buffer]));

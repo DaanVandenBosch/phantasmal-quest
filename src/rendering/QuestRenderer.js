@@ -25,6 +25,10 @@ import {
 
 const OrbitControls = OrbitControlsCreator(THREE);
 
+type QuestRendererParams = {
+    on_select: ?VisibleQuestEntity => void
+};
+
 /**
  * Renders one quest area at a time.
  */
@@ -37,7 +41,7 @@ export class QuestRenderer {
     _scene = new Scene();
     _quest: ?Quest = null;
     _quest_entities_loaded = false;
-    _area: Area = null;
+    _area: ?Area = null;
     _objs: Map<number, QuestObject[]> = new Map(); // Objs grouped by area id
     _npcs: Map<number, QuestNpc[]> = new Map(); // Npcs grouped by area id
     _collision_geometry = new Object3D();
@@ -45,10 +49,10 @@ export class QuestRenderer {
     _obj_geometry = new Object3D();
     _npc_geometry = new Object3D();
     _on_select = null;
-    _hovered_data = null;
-    _selected_data = null;
+    _hovered_data: any = null;
+    _selected_data: any = null;
 
-    constructor({on_select}) {
+    constructor({ on_select }: QuestRendererParams) {
         this._on_select = on_select;
 
         this._renderer.domElement.addEventListener(
@@ -301,7 +305,7 @@ export class QuestRenderer {
     /**
      * @param pointer_pos - pointer coordinates in normalized device space
      */
-    _pick_entity(pointer_pos: Vector2): VisibleQuestEntity {
+    _pick_entity(pointer_pos: Vector2): any {
         // Find the nearest object and NPC under the pointer.
         this._raycaster.setFromCamera(pointer_pos, this._camera);
         const [nearest_object] = this._raycaster.intersectObjects(
@@ -370,7 +374,7 @@ export class QuestRenderer {
         return null;
     }
 
-    _get_color(entity, type) {
+    _get_color(entity: VisibleQuestEntity, type: 'normal' | 'hover' | 'selected') {
         const is_npc = entity instanceof QuestNpc;
 
         switch (type) {

@@ -2,6 +2,7 @@
 import React from 'react';
 import { entity_selected } from '../actions';
 import { QuestRenderer } from '../rendering/QuestRenderer';
+import { Area, Quest, VisibleQuestEntity } from '../domain';
 
 export class Area3DComponent extends React.Component {
     _renderer = new QuestRenderer({
@@ -12,7 +13,7 @@ export class Area3DComponent extends React.Component {
         return <div style={this.props.style} ref={this._modify_dom} />;
     }
 
-    componentWillReceiveProps({quest, area}) {
+    componentWillReceiveProps({quest, area}: { quest: Quest, area: Area }) {
         this._renderer.set_quest_and_area(quest, area);
     }
 
@@ -20,12 +21,12 @@ export class Area3DComponent extends React.Component {
         return false;
     }
 
-    _modify_dom = div => {
+    _modify_dom = (div: HTMLDivElement) => {
         this._renderer.set_size(div.clientWidth, div.clientHeight);
         div.appendChild(this._renderer.dom_element);
     }
 
-    _on_select(entity) {
+    _on_select(entity: ?VisibleQuestEntity) {
         entity_selected(entity);
     }
 }

@@ -48,7 +48,7 @@ export class ApplicationComponent extends React.Component {
 
     render() {
         const quest = application_state.current_quest;
-        const areas = quest ? [...quest.area_variants].map(a => a.area) : null;
+        const areas = quest ? Array.from(quest.area_variants).map(a => a.area) : null;
         const area = application_state.current_area;
         const area_id = area && area.id;
 
@@ -155,17 +155,8 @@ export class ApplicationComponent extends React.Component {
     }
 
     _on_save_as_click = () => {
-        let name;
-
-        if (this.state.filename) {
-            if (this.state.filename.endsWith('.qst')) {
-                name = this.state.filename.slice(0, -4);
-            } else {
-                name = this.state.filename;
-            }
-        } else {
-            name = 'Untitled';
-        }
+        let name = this.state.filename || 'Untitled';
+        name = name.endsWith('.qst') ? name.slice(0, -4) : name;
 
         this.setState({
             save_dialog_open: true,

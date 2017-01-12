@@ -36,7 +36,7 @@ export function parse_bin(cursor: ArrayBufferCursor) {
     };
 }
 
-export function write_bin({data}): ArrayBufferCursor {
+export function write_bin({data}: { data: ArrayBufferCursor }): ArrayBufferCursor {
     return data.seek_start(0);
 }
 

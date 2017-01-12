@@ -1,4 +1,3 @@
-// @flow
 import * as fs from 'fs';
 import { ArrayBufferCursor } from '../ArrayBufferCursor';
 import * as prs from '../compression/prs';

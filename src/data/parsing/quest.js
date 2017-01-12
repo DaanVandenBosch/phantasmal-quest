@@ -21,11 +21,17 @@ import { area_store } from '../../store';
  * 
  * Always delegates to parse_qst at the moment.
  */
-export function parse_quest(cursor: ArrayBufferCursor): Quest {
+export function parse_quest(cursor: ArrayBufferCursor): ?Quest {
+    const qst = parse_qst(cursor);
+
+    if (!qst) {
+        return null;
+    }
+
     let dat_file = null;
     let bin_file = null;
 
-    for (const file of parse_qst(cursor).files) {
+    for (const file of qst.files) {
         if (file.name.endsWith('.dat')) {
             dat_file = file;
         } else if (file.name.endsWith('.bin')) {
@@ -34,6 +40,11 @@ export function parse_quest(cursor: ArrayBufferCursor): Quest {
     }
 
     // TODO: deal with missing/multiple DAT or BIN file.
+
+    if (!dat_file || !bin_file) {
+        return null;
+    }
+
     const dat = parse_dat(prs.decompress(dat_file.data));
     const bin = parse_bin(prs.decompress(bin_file.data));
     let episode = 1;
@@ -123,7 +134,7 @@ function get_area_variants(episode, func_0_ops): AreaVariant[] {
 
     // Sort by area order and then variant id.
     return (
-        [...area_variants]
+        Array.from(area_variants)
             .map(([area_id, variant_id]) =>
                 area_store.get_variant(episode, area_id, variant_id))
             .sort((a, b) => a.area.order - b.area.order || a.id - b.id)

@@ -369,6 +369,7 @@ export function parse_n_rel(
     }
 
     return {
+        // $FlowFixMe
         sections: [...sections.values()].sort((a, b) => a.id - b.id),
         object_3d: object
     };

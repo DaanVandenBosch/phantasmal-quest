@@ -3,9 +3,9 @@ import { ArrayBufferCursor } from '../ArrayBufferCursor';
 
 type QstContainedFile = {
     name: string;
-    name_2: string | null; // Unsure what this is
-    quest_no: number | null;
-    expected_size: number | null;
+    name_2: ?string; // Unsure what this is
+    quest_no: ?number;
+    expected_size: ?number;
     data: ArrayBufferCursor;
     chunk_nos: Set<number>;
 };
@@ -19,7 +19,7 @@ type ParseQstResult = {
  * Low level parsing function for .qst files.
  * Can only read the Blue Burst format.
  */
-export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult | null {
+export function parse_qst(cursor: ArrayBufferCursor): ?ParseQstResult {
     // A .qst file contains two 88-byte headers that describe the embedded .dat and .bin files.
     let version = 'PC';
 
@@ -49,8 +49,11 @@ export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult | null {
 
         for (const file of files) {
             const header = headers.find(h => h.file_name === file.name);
-            file.quest_no = header ? header.quest_no : null;
-            file.name_2 = header.file_name_2;
+
+            if (header) {
+                file.quest_no = header.quest_no;
+                file.name_2 = header.file_name_2;
+            }
         }
 
         return {
@@ -64,13 +67,13 @@ export function parse_qst(cursor: ArrayBufferCursor): ParseQstResult | null {
 
 type SimpleQstContainedFile = {
     name: string;
-    name_2: ?string;
-    quest_no: number;
+    name_2?: ?string;
+    quest_no?: ?number;
     data: ArrayBufferCursor;
 };
 
 type WriteQstParams = {
-    version: ?string;
+    version?: ?string;
     files: SimpleQstContainedFile[];
 };
 
@@ -138,6 +141,8 @@ function parse_files(cursor: ArrayBufferCursor, expected_sizes: Map<string, numb
             const expected_size = expected_sizes.get(file_name) || null;
             files.set(file_name, file = {
                 name: file_name,
+                name_2: null,
+                quest_no: null,
                 expected_size,
                 data: new ArrayBufferCursor(expected_size || (10 * 1024), true),
                 chunk_nos: new Set()
@@ -175,10 +180,10 @@ function parse_files(cursor: ArrayBufferCursor, expected_sizes: Map<string, numb
     for (const file of files.values()) {
         // Clean up file properties.
         file.data.seek_start(0);
-        file.chunk_nos = new Set([...file.chunk_nos.values()].sort((a, b) => a - b));
+        file.chunk_nos = new Set(Array.from(file.chunk_nos.values()).sort((a, b) => a - b));
 
         // Check whether the expected size was correct.
-        if (file.expected_size !== null && file.data.size !== file.expected_size) {
+        if (file.expected_size != null && file.data.size !== file.expected_size) {
             console.warn(`File ${file.name} has an actual size of ${file.data.size} instead of the expected size ${file.expected_size}.`);
         }
 
@@ -192,14 +197,14 @@ function parse_files(cursor: ArrayBufferCursor, expected_sizes: Map<string, numb
         }
     }
 
-    return [...files.values()];
+    return Array.from(files.values());
 }
 
 function write_file_headers(cursor: ArrayBufferCursor, files: SimpleQstContainedFile[]): void {
     for (const file of files) {
         cursor.write_u16(88); // Header size.
         cursor.write_u16(0x44); // Magic number.
-        cursor.write_u16(file.quest_no);
+        cursor.write_u16(file.quest_no || 0);
 
         for (let i = 0; i < 38; ++i) {
             cursor.write_u8(0);
@@ -208,13 +213,16 @@ function write_file_headers(cursor: ArrayBufferCursor, files: SimpleQstContained
         cursor.write_string_ascii(file.name, 16);
         cursor.write_u32(file.data.size);
 
-        let file_name_2 = file.name_2;
+        let file_name_2: string;
 
-        if (file_name_2 === null || file_name_2 === undefined) {
+        if (file.name_2 == null) {
+            // Not sure this makes sense.
             const dot_pos = file.name.lastIndexOf('.');
             file_name_2 = dot_pos === -1
                 ? file.name + '_j'
                 : file.name.slice(0, dot_pos) + '_j' + file.name.slice(dot_pos);
+        } else {
+            file_name_2 = file.name_2;
         }
 
         cursor.write_string_ascii(file_name_2, 24);

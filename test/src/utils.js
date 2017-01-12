@@ -7,8 +7,8 @@ import * as fs from 'fs';
  * Uses the QST files provided with Tethealla version 0.143 by default.
  */
 export function walk_qst_files(
-    f: (string, string, Uint8Array) => void,
-    dir = 'test/resources/tethealla_v0.143_quests'
+    f: (string, string, Buffer) => void,
+    dir: string = 'test/resources/tethealla_v0.143_quests'
 ) {
     for (const [path, file] of get_qst_files(dir)) {
         f(path, file, fs.readFileSync(path));
