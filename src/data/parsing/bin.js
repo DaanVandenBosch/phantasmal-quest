@@ -5,16 +5,22 @@
 import { ArrayBufferCursor } from '../ArrayBufferCursor';
 
 export function parse_bin(cursor: ArrayBufferCursor) {
-    const script_offset = cursor.u32();
+    const object_code_offset = cursor.u32();
     const function_offset_table_offset = cursor.u32(); // Relative offsets
-    const unknown_offset = cursor.u32();
-    cursor.seek(12);
+    const size = cursor.u32();
+    cursor.seek(4); // Always seems to be 0xFFFFFFFF
+    const quest_number = cursor.u32();
+    const language = cursor.u32();
     const quest_name = cursor.string_utf_16(64, true, true);
     const short_description = cursor.string_utf_16(256, true, true);
-    const long_description = cursor.string_utf_16(512, true, true);
+    const long_description = cursor.string_utf_16(576, true, true);
+
+    if (size !== cursor.size) {
+        console.warn(`Value ${size} in bin size field does not match actual size ${cursor.size}.`);
+    }
 
     const function_offset_count = Math.floor(
-        (unknown_offset - function_offset_table_offset) / 4);
+        (cursor.size - function_offset_table_offset) / 4);
 
     cursor.seek_start(function_offset_table_offset);
     const function_offsets = [];
@@ -24,9 +30,11 @@ export function parse_bin(cursor: ArrayBufferCursor) {
     }
 
     const instructions = parse_object_code(
-        cursor.seek_start(script_offset).take(function_offset_table_offset - script_offset));
+        cursor.seek_start(object_code_offset).take(function_offset_table_offset - object_code_offset));
 
     return {
+        quest_number,
+        language,
         quest_name,
         short_description,
         long_description,
