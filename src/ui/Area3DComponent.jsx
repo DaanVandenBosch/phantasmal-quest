@@ -1,11 +1,12 @@
 // @flow
 import React from 'react';
+import { Object3D } from 'three';
 import { entity_selected } from '../actions';
-import { QuestRenderer } from '../rendering/QuestRenderer';
+import { Renderer } from '../rendering/Renderer';
 import { Area, Quest, VisibleQuestEntity } from '../domain';
 
 export class Area3DComponent extends React.Component {
-    _renderer = new QuestRenderer({
+    _renderer = new Renderer({
         on_select: this._on_select.bind(this)
     });
 
@@ -13,8 +14,12 @@ export class Area3DComponent extends React.Component {
         return <div style={this.props.style} ref={this._modify_dom} />;
     }
 
-    componentWillReceiveProps({quest, area}: { quest: Quest, area: Area }) {
-        this._renderer.set_quest_and_area(quest, area);
+    componentWillReceiveProps({quest, area, model}: { quest: ?Quest, area: ?Area, model: ?Object3D }) {
+        if (model) {
+            this._renderer.set_model(model);
+        } else {
+            this._renderer.set_quest_and_area(quest, area);
+        }
     }
 
     shouldComponentUpdate() {

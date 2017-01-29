@@ -145,7 +145,7 @@ export function parse_n_rel(
         const section_x = dv.getFloat32(i + 4, true);
         const section_y = dv.getFloat32(i + 8, true);
         const section_z = dv.getFloat32(i + 12, true);
-        const section_rotation = dv.getUint32(i + 20, true) / 65536 * 2 * Math.PI;
+        const section_rotation = dv.getInt32(i + 20, true) / 0xFFFF * 2 * Math.PI;
         const section = new Section(
             section_id,
             new Vec3(section_x, section_y, section_z),

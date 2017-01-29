@@ -32,7 +32,7 @@ type QuestRendererParams = {
 /**
  * Renders one quest area at a time.
  */
-export class QuestRenderer {
+export class Renderer {
     _renderer = new WebGLRenderer({ antialias: true });
     _camera: PerspectiveCamera;
     _controls: OrbitControls;
@@ -51,6 +51,7 @@ export class QuestRenderer {
     _on_select = null;
     _hovered_data: any = null;
     _selected_data: any = null;
+    _model: ?Object3D = null;
 
     constructor({ on_select }: QuestRendererParams) {
         this._on_select = on_select;
@@ -84,7 +85,7 @@ export class QuestRenderer {
         this._camera.updateProjectionMatrix();
     }
 
-    set_quest_and_area(quest: Quest, area: Area) {
+    set_quest_and_area(quest: ?Quest, area: ?Area) {
         let update = false;
 
         if (this._area !== area) {
@@ -120,6 +121,25 @@ export class QuestRenderer {
         }
     }
 
+    /**
+     * Renders a generic Object3D.
+     */
+    set_model(model: ?Object3D) {
+        if (this._model !== model) {
+            if (this._model) {
+                this._scene.remove(this._model);
+            }
+
+            if (model) {
+                this.set_quest_and_area(null, null);
+                this._scene.add(model);
+                this._reset_camera();
+            }
+
+            this._model = model;
+        }
+    }
+
     _update_geometry() {
         this._scene.remove(this._obj_geometry);
         this._scene.remove(this._npc_geometry);
@@ -139,6 +159,7 @@ export class QuestRenderer {
 
             get_area_collision_geometry(episode, area_id, variant_id).then(geometry => {
                 if (this._quest && this._area) {
+                    this.set_model(null);
                     this._scene.remove(this._collision_geometry);
 
                     this._reset_camera();

@@ -1,5 +1,6 @@
 // @flow
 import { observable } from 'mobx';
+import { Object3D } from 'three';
 import { Area, AreaVariant, Quest, VisibleQuestEntity } from './domain';
 
 function area(id, name, order, variants) {
@@ -92,6 +93,7 @@ class AreaStore {
 export const area_store = new AreaStore();
 
 class ApplicationState {
+    @observable current_model: ?Object3D = null;
     @observable current_quest: ?Quest = null;
     @observable current_area: ?Area = null;
     @observable selected_entity: ?VisibleQuestEntity = null;

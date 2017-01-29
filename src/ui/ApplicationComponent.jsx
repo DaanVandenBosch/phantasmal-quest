@@ -48,6 +48,7 @@ export class ApplicationComponent extends React.Component {
 
     render() {
         const quest = application_state.current_quest;
+        const model = application_state.current_model;
         const areas = quest ? Array.from(quest.area_variants).map(a => a.area) : null;
         const area = application_state.current_area;
         const area_id = area && area.id;
@@ -63,7 +64,7 @@ export class ApplicationComponent extends React.Component {
                         <label className="pt-file-upload">
                             <input
                                 type="file"
-                                accept=".qst"
+                                accept=".qst, .nj"
                                 onChange={this._on_file_change} />
                             <span className="pt-file-upload-input">
                                 <span style={this._file_upload_style}>
@@ -97,7 +98,8 @@ export class ApplicationComponent extends React.Component {
                     <Area3DComponent
                         style={this._area_3d_style}
                         quest={quest}
-                        area={area} />
+                        area={area}
+                        model={model} />
                     <EntityInfoComponent entity={application_state.selected_entity} />
                 </div>
                 <Dialog
