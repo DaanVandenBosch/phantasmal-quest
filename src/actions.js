@@ -87,6 +87,7 @@ export function save_current_quest_to_file(file_name: string) {
 }
 
 function reset_model_and_quest_state() {
+    application_state.current_quest = null;
     application_state.current_area = null;
     application_state.selected_entity = null;
     application_state.current_model = null;

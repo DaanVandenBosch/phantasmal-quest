@@ -90,16 +90,19 @@ function parse_model(cursor: ArrayBufferCursor): Object3D {
     const vlist_offset = cursor.u32();
     const plist_offset = cursor.u32();
 
-    let positions = new Float32Array();
-    let normals = new Uint16Array();
+    let positions = [];
+    let normals = [];
 
     if (vlist_offset) {
         try {
             cursor.seek_start(vlist_offset);
-            const result = parse_vlist(cursor);
 
-            if (result) {
-                [positions, normals] = result;
+            for (const chunk of parse_chunks(cursor)) {
+                if (chunk.chunk_type === 'VERTEX') {
+                    const [chunk_positions, chunk_normals] = chunk.data;
+                    positions = positions.concat(chunk_positions);
+                    normals = normals.concat(chunk_normals);
+                }
             }
         } catch (e) {
             console.error(e);
@@ -110,13 +113,13 @@ function parse_model(cursor: ArrayBufferCursor): Object3D {
 
     if (plist_offset) {
         cursor.seek_start(plist_offset);
-        indices = parse_plist(cursor);
+        // TODO
     } else {
         indices = new Uint16Array();
     }
 
     const geometry = new BufferGeometry();
-    geometry.addAttribute('position', new BufferAttribute(positions, 3));
+    geometry.addAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
     // geometry.setIndex(new BufferAttribute(indices, 1));
 
     const points = new Points(
@@ -134,24 +137,53 @@ function parse_model(cursor: ArrayBufferCursor): Object3D {
     return points;
 }
 
-function parse_vlist(cursor: ArrayBufferCursor): ?[Float32Array, Float32Array] {
-    // TODO: parse multiple vertex chunks.
-    console.log(`vlist offset: ${cursor.position}`);
-    const chunk_type = cursor.u8();
-    cursor.seek(1);
-    const vertex_count = cursor.u16();
+function parse_chunks(cursor: ArrayBufferCursor): *[] {
+    const chunks = [];
+    let loop = true;
+
+    while (loop) {
+        const chunk_type_id = cursor.u8();
+        cursor.seek(1); // Flags
+        const size = cursor.u16();
+        const chunk_start_position = cursor.position;
+        let stride = 2;
+        let chunk_type = 'UNKOWN';
+        let data = null;
+
+        if (chunk_type_id === 0) {
+            chunk_type = 'NULL';
+        } else if (32 <= chunk_type_id && chunk_type_id <= 50) {
+            chunk_type = 'VERTEX';
+            data = parse_chunk_vertex(cursor, chunk_type_id);
+            stride = 4;
+        } else if (chunk_type_id === 255) {
+            chunk_type = 'END';
+            loop = false;
+        } else {
+            // Ignore unknown chunks.
+            console.warn(`Unknown chunk type: ${chunk_type_id}.`);
+        }
+
+        cursor.seek_start(chunk_start_position + stride * size);
+
+        chunks.push({
+            chunk_type,
+            chunk_type_id,
+            data
+        });
+    }
+
+    return chunks;
+}
+
+function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): [Float32Array, Float32Array] {
     const index_offsets = cursor.u16();
     const index_count = cursor.u16();
-
-    if (chunk_type < 32 || chunk_type > 50) {
-        console.warn(`Invalid vlist chunk type: ${chunk_type}.`);
-        return null;
-    }
 
     const positions = [];
     const normals = [];
 
-    console.log(`chunk_type: ${chunk_type}, vertex_count: ${vertex_count}, index_offsets: ${index_offsets}, index_count: ${index_count}`);
+    console.log(`chunk_type: ${chunk_type_id}, index_offsets: ${index_offsets}, index_count: ${index_count}`);
 
     for (let i = 0; i < index_count; ++i) {
         // TODO: add default normal when not specified.
@@ -159,31 +191,31 @@ function parse_vlist(cursor: ArrayBufferCursor): ?[Float32Array, Float32Array] {
         positions.push(cursor.f32()); // y
         positions.push(cursor.f32()); // z
 
-        if (chunk_type === 32) {
+        if (chunk_type_id === 32) {
             cursor.seek(4); // Always 1.0
-        } else if (chunk_type === 33) {
+        } else if (chunk_type_id === 33) {
             cursor.seek(4); // Always 1.0
             normals.push(cursor.f32()); // x
             normals.push(cursor.f32()); // y
             normals.push(cursor.f32()); // z
             cursor.seek(4); // Always 0.0
-        } else if (35 <= chunk_type && chunk_type <= 40) {
+        } else if (35 <= chunk_type_id && chunk_type_id <= 40) {
             // Skip various flags and material information.
             cursor.seek(4);
-        } else if (41 <= chunk_type && chunk_type <= 47) {
+        } else if (41 <= chunk_type_id && chunk_type_id <= 47) {
             normals.push(cursor.f32()); // x
             normals.push(cursor.f32()); // y
             normals.push(cursor.f32()); // z
 
-            if (chunk_type > 41) {
+            if (chunk_type_id > 41) {
                 // Skip various flags and material information.
                 cursor.seek(4);
             }
-        } else if (chunk_type >= 48) {
+        } else if (chunk_type_id >= 48) {
             // Skip 32-bit vertex normal in format: reserved(2)|x(10)|y(10)|z(10)
             cursor.seek(4);
 
-            if (chunk_type >= 49) {
+            if (chunk_type_id >= 49) {
                 // Skip various flags and material information.
                 cursor.seek(4);
             }
@@ -192,11 +224,5 @@ function parse_vlist(cursor: ArrayBufferCursor): ?[Float32Array, Float32Array] {
         console.log(...positions.slice(-3));
     }
 
-    return [new Float32Array(positions), new Float32Array(normals)];
-}
-
-function parse_plist(cursor: ArrayBufferCursor): Uint16Array {
-    console.log(`plist offset: ${cursor.position}`);
-    const indices = [];
-    return new Uint16Array(indices);
+    return [positions, normals];
 }
