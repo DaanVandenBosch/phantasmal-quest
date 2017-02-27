@@ -27,9 +27,7 @@ export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEnt
                     <td colSpan="2">{entity.type.name}</td>
                 </tr>
             );
-        }
-
-        if (entity instanceof QuestNpc) {
+        } else if (entity instanceof QuestNpc) {
             name = (
                 <tr>
                     <td colSpan="2">{entity.type.name}</td>

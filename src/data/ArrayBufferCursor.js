@@ -158,6 +158,15 @@ export class ArrayBufferCursor {
     }
 
     /**
+     * Reads a signed 16-bit integer and increments position by 2.
+     */
+    i16() {
+        const r = this._dv.getInt16(this.position, this.little_endian);
+        this.position += 2;
+        return r;
+    }
+
+    /**
      * Reads a signed 32-bit integer and increments position by 4.
      */
     i32() {
