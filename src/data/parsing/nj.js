@@ -14,6 +14,15 @@ import {
 } from 'three';
 import { ArrayBufferCursor } from '../ArrayBufferCursor';
 
+// TODO:
+// - deal with multiple NJCM chunks
+// - deal with other types of chunks
+// - textures
+// - colors
+// - bump maps
+// - animation
+// - deal with vertex information contained in triangle strips
+// - fix bugs that occur when parsing many of the bosses, bullclaws, gi gues, mothmans, gibons...
 export function parse_nj(cursor: ArrayBufferCursor): ?Object3D {
     while (cursor.bytes_left) {
         // NJ uses a little endian variant of the IFF format.
@@ -32,11 +41,29 @@ export function parse_nj(cursor: ArrayBufferCursor): ?Object3D {
     return null;
 }
 
+type Node = {
+    vertices: { position: Vector3, normal: Vector3 }[],
+    indices: number[],
+    parent: ?Node,
+    children: Node[]
+};
+
+type ChunkVertex = {
+    index: number,
+    position: [number, number, number],
+    normal?: [number, number, number]
+};
+
+type ChunkTriangleStrip = {
+    clockwise_winding: boolean,
+    indices: number[]
+};
+
 function parse_njcm(cursor: ArrayBufferCursor): ?Object3D {
     if (cursor.bytes_left) {
-        const positions = [];
-        const normals = [];
-        const indices = [];
+        const positions: number[] = [];
+        const normals: number[] = [];
+        const indices: number[] = [];
         parse_sibling_objects(cursor, new Matrix4(), positions, normals, indices);
         return create_object_3d(positions, normals, indices);
     } else {
@@ -51,7 +78,11 @@ function parse_sibling_objects(
     normals: number[],
     indices: number[]
 ): void {
-    cursor.seek(4);
+    const eval_flags = cursor.u32();
+    const hidden = (eval_flags & 0b1000) !== 0;
+    const break_child_trace = (eval_flags & 0b10000) !== 0;
+    const zxy_rotation_order = (eval_flags & 0b100000) !== 0;
+
     const model_offset = cursor.u32();
     const pos_x = cursor.f32();
     const pos_y = cursor.f32();
@@ -65,20 +96,21 @@ function parse_sibling_objects(
     const child_offset = cursor.u32();
     const sibling_offset = cursor.u32();
 
+    const rotation = new Euler(rotation_x, rotation_y, rotation_z, zxy_rotation_order ? 'ZXY' : 'ZYX');
     const matrix = new Matrix4()
         .compose(
         new Vector3(pos_x, pos_y, pos_z),
-        new Quaternion().setFromEuler(new Euler(rotation_x, rotation_y, rotation_z)),
+        new Quaternion().setFromEuler(rotation),
         new Vector3(scale_x, scale_y, scale_z)
         )
         .premultiply(parent_matrix);
 
-    if (model_offset) {
+    if (model_offset && !hidden) {
         cursor.seek_start(model_offset);
         parse_model(cursor, matrix, positions, normals, indices);
     }
 
-    if (child_offset) {
+    if (child_offset && !break_child_trace) {
         cursor.seek_start(child_offset);
         parse_sibling_objects(cursor, matrix, positions, normals, indices);
     }
@@ -95,8 +127,12 @@ function create_object_3d(
     indices: number[]
 ): Object3D {
     for (let i = 0; i < positions.length; ++i) {
-        if (typeof positions[i] !== 'number') {
+        if (positions[i] === undefined) {
             positions[i] = 0;
+        }
+
+        if (normals[i] === undefined) {
+            normals[i] = 0;
         }
     }
 
@@ -121,38 +157,32 @@ function parse_model(
     normals: number[],
     indices: number[]
 ): void {
-    const vlist_offset = cursor.u32(); // Vertex list
-    const plist_offset = cursor.u32(); // Triangle strip index list
-
-    const normal_matrix = new Matrix3().getNormalMatrix(matrix);
-
     try {
+        const vlist_offset = cursor.u32(); // Vertex list
+        const plist_offset = cursor.u32(); // Triangle strip index list
+
+        const normal_matrix = new Matrix3().getNormalMatrix(matrix);
+
         if (vlist_offset) {
             cursor.seek_start(vlist_offset);
 
-            for (const chunk of parse_chunks(cursor)) {
+            for (const chunk of parse_chunks(cursor, true)) {
                 if (chunk.chunk_type === 'VERTEX') {
-                    const {index, vertices} = (chunk.data: any);
-                    let i = 3 * index;
+                    const chunk_vertices: ChunkVertex[] = (chunk.data: any);
 
-                    for (const {position, normal} of vertices) {
-                        if (typeof positions[i] !== 'number') {
-                            const pos = new Vector3(...position).applyMatrix4(matrix);
+                    for (const vertex of chunk_vertices) {
+                        const index = 3 * vertex.index;
+                        const position = new Vector3(...vertex.position).applyMatrix4(matrix);
+                        positions[index + 0] = position.x;
+                        positions[index + 1] = position.y;
+                        positions[index + 2] = position.z;
 
-                            positions[i] = pos.x;
-                            positions[i + 1] = pos.y;
-                            positions[i + 2] = pos.z;
-
-                            if (normal) {
-                                const norm = new Vector3(...normal).applyMatrix3(normal_matrix);
-
-                                normals[i] = norm.x;
-                                normals[i + 1] = norm.y;
-                                normals[i + 2] = norm.z;
-                            }
+                        if (vertex.normal) {
+                            const normal = new Vector3(...vertex.normal).applyMatrix3(normal_matrix);
+                            normals[index + 0] = normal.x;
+                            normals[index + 1] = normal.y;
+                            normals[index + 2] = normal.z;
                         }
-
-                        i += 3;
                     }
                 }
             }
@@ -161,15 +191,15 @@ function parse_model(
         if (plist_offset) {
             cursor.seek_start(plist_offset);
 
-            for (const chunk of parse_chunks(cursor)) {
-                if (chunk.chunk_type === 'TRIANGLE_STRIP') {
+            for (const chunk of parse_chunks(cursor, false)) {
+                if (chunk.chunk_type === 'STRIP') {
                     for (const {clockwise_winding, indices: strip_indices} of (chunk.data: any)) {
                         for (let j = 2; j < strip_indices.length; ++j) {
                             const a = strip_indices[j - 2];
                             const b = strip_indices[j - 1];
                             const c = strip_indices[j];
 
-                            if ((j % 2 === 0) !== clockwise_winding) {
+                            if (j % 2 === (clockwise_winding ? 1 : 0)) {
                                 indices.push(a);
                                 indices.push(b);
                                 indices.push(c);
@@ -188,49 +218,51 @@ function parse_model(
     }
 }
 
-function parse_chunks(cursor: ArrayBufferCursor): *[] {
+function parse_chunks(cursor: ArrayBufferCursor, wide_end_chunks: boolean): *[] {
     const chunks = [];
     let loop = true;
 
     while (loop) {
         const chunk_type_id = cursor.u8();
         cursor.seek(1); // Flags
+        const chunk_start_position = cursor.position;
         let chunk_type = 'UNKOWN';
         let data = null;
+        let size = 0;
 
         if (chunk_type_id === 0) {
             chunk_type = 'NULL';
-        } else if (chunk_type_id === 8 || chunk_type_id === 9) {
-            // NJ_TEX1 or NJ_TEX2
-            cursor.seek(2);
-        } else if (16 <= chunk_type_id && chunk_type_id <= 23) {
-            // NJ_MAT1 - 1st Texture Unit Material Definition
-            cursor.seek(6);
-        } else if (chunk_type_id === 24) {
-            // NJ_BUMP - Bump Map Definition
-            const size = cursor.u16();
-            cursor.seek(2 * size);
-        } else if (25 <= chunk_type_id && chunk_type_id <= 31) {
-            // NJ_MAT2 - 2nd Texture Unit Material Definition
-            const size = cursor.u16();
-            cursor.seek(2 * size);
+        } else if (1 <= chunk_type_id && chunk_type_id <= 5) {
+            chunk_type = 'BITS';
+        } else if (8 <= chunk_type_id && chunk_type_id <= 9) {
+            chunk_type = 'TINY';
+            size = 2;
+        } else if (17 <= chunk_type_id && chunk_type_id <= 31) {
+            chunk_type = 'MATERIAL';
+            size = 2 + 2 * cursor.u16();
         } else if (32 <= chunk_type_id && chunk_type_id <= 50) {
             chunk_type = 'VERTEX';
+            size = 2 + 4 * cursor.u16();
             data = parse_chunk_vertex(cursor, chunk_type_id);
         } else if (56 <= chunk_type_id && chunk_type_id <= 58) {
-            // NJ_VOLM - Volume Chunk
-            const size = cursor.u16();
-            cursor.seek(2 * size);
+            chunk_type = 'VOLUME';
+            size = 2 + 2 * cursor.u16();
         } else if (64 <= chunk_type_id && chunk_type_id <= 75) {
-            chunk_type = 'TRIANGLE_STRIP';
+            chunk_type = 'STRIP';
+            size = 2 + 2 * cursor.u16();
             data = parse_chunk_triangle_strip(cursor, chunk_type_id);
         } else if (chunk_type_id === 255) {
             chunk_type = 'END';
+            size = wide_end_chunks ? 2 : 0;
             loop = false;
         } else {
             // Ignore unknown chunks.
             console.warn(`Unknown chunk type: ${chunk_type_id}.`);
+            size = 2 + 2 * cursor.u16();
         }
+
+        cursor.seek_start(chunk_start_position);
+        cursor.seek(size);
 
         chunks.push({
             chunk_type,
@@ -242,14 +274,7 @@ function parse_chunks(cursor: ArrayBufferCursor): *[] {
     return chunks;
 }
 
-type ChunkVertex = {
-    position: [number, number, number],
-    normal?: [number, number, number]
-};
-
-function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): { index: number, vertices: ChunkVertex[] } {
-    const size = cursor.u16();
-    const chunk_start_position = cursor.position;
+function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): ChunkVertex[] {
     const index = cursor.u16();
     const vertex_count = cursor.u16();
 
@@ -257,6 +282,7 @@ function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): {
 
     for (let i = 0; i < vertex_count; ++i) {
         const vertex: ChunkVertex = {
+            index: index + i,
             position: [
                 cursor.f32(), // x
                 cursor.f32(), // y
@@ -275,8 +301,14 @@ function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): {
             ];
             cursor.seek(4); // Always 0.0
         } else if (35 <= chunk_type_id && chunk_type_id <= 40) {
-            // Skip various flags and material information.
-            cursor.seek(4);
+            if (chunk_type_id === 37) {
+                // Ninja flags
+                vertex.index = index + cursor.u16();
+                cursor.seek(2);
+            } else {
+                // Skip user flags and material information.
+                cursor.seek(4);
+            }
         } else if (41 <= chunk_type_id && chunk_type_id <= 47) {
             vertex.normal = [
                 cursor.f32(), // x
@@ -284,16 +316,22 @@ function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): {
                 cursor.f32(), // z
             ];
 
-            if (chunk_type_id > 41) {
-                // Skip various flags and material information.
-                cursor.seek(4);
+            if (chunk_type_id >= 42) {
+                if (chunk_type_id === 44) {
+                    // Ninja flags
+                    vertex.index = index + cursor.u16();
+                    cursor.seek(2);
+                } else {
+                    // Skip user flags and material information.
+                    cursor.seek(4);
+                }
             }
         } else if (chunk_type_id >= 48) {
             // Skip 32-bit vertex normal in format: reserved(2)|x(10)|y(10)|z(10)
             cursor.seek(4);
 
             if (chunk_type_id >= 49) {
-                // Skip various flags and material information.
+                // Skip user flags and material information.
                 cursor.seek(4);
             }
         }
@@ -301,21 +339,12 @@ function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): {
         vertices.push(vertex);
     }
 
-    cursor.seek_start(chunk_start_position + 4 * size);
-
-    return { index, vertices };
+    return vertices;
 }
 
-type ChunkTriangleStrip = {
-    clockwise_winding: boolean,
-    indices: number[]
-};
-
 function parse_chunk_triangle_strip(cursor: ArrayBufferCursor, chunk_type_id: number): ChunkTriangleStrip[] {
-    const size = cursor.u16();
-    const chunk_start_position = cursor.position;
     const user_offset_and_strip_count = cursor.u16();
-    const user_flags_size = user_offset_and_strip_count >>> 13;
+    const user_flags_size = user_offset_and_strip_count >>> 14;
     const strip_count = user_offset_and_strip_count & 0x3FFF;
     let options;
 
@@ -377,8 +406,6 @@ function parse_chunk_triangle_strip(cursor: ArrayBufferCursor, chunk_type_id: nu
 
         strips.push({ clockwise_winding, indices });
     }
-
-    cursor.seek_start(chunk_start_position + 2 * size);
 
     return strips;
 }
