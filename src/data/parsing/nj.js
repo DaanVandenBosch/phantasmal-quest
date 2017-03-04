@@ -2,12 +2,9 @@
 import {
     BufferAttribute,
     BufferGeometry,
-    DoubleSide,
     Euler,
     Matrix3,
     Matrix4,
-    Mesh,
-    MeshLambertMaterial,
     Object3D,
     Quaternion,
     Vector3
@@ -59,13 +56,13 @@ type ChunkTriangleStrip = {
     indices: number[]
 };
 
-function parse_njcm(cursor: ArrayBufferCursor): ?Object3D {
+function parse_njcm(cursor: ArrayBufferCursor): ?BufferGeometry {
     if (cursor.bytes_left) {
         const positions: number[] = [];
         const normals: number[] = [];
         const indices: number[] = [];
         parse_sibling_objects(cursor, new Matrix4(), positions, normals, indices);
-        return create_object_3d(positions, normals, indices);
+        return create_buffer_geometry(positions, normals, indices);
     } else {
         return null;
     }
@@ -121,11 +118,11 @@ function parse_sibling_objects(
     }
 }
 
-function create_object_3d(
+function create_buffer_geometry(
     positions: number[],
     normals: number[],
     indices: number[]
-): Object3D {
+): BufferGeometry {
     for (let i = 0; i < positions.length; ++i) {
         if (positions[i] === undefined) {
             positions[i] = 0;
@@ -140,14 +137,7 @@ function create_object_3d(
     geometry.addAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
     geometry.addAttribute('normal', new BufferAttribute(new Float32Array(normals), 3));
     geometry.setIndex(new BufferAttribute(new Uint16Array(indices), 1));
-
-    return new Mesh(
-        geometry,
-        new MeshLambertMaterial({
-            color: 0xFF00FF,
-            side: DoubleSide
-        })
-    );
+    return geometry;
 }
 
 function parse_model(

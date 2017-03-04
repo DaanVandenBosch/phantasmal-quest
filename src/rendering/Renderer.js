@@ -13,7 +13,7 @@ import {
 } from 'three';
 import OrbitControlsCreator from 'three-orbit-controls';
 import { Vec3, Area, Quest, VisibleQuestEntity, QuestObject, QuestNpc } from '../domain';
-import { get_area_collision_geometry, get_area_render_geometry } from '../area-data';
+import { get_area_collision_geometry, get_area_render_geometry } from '../data/loading/areas';
 import {
     OBJECT_COLOR,
     OBJECT_HOVER_COLOR,
@@ -227,21 +227,18 @@ export class Renderer {
         if (this._hovered_data && (!data || data.object !== this._hovered_data.object)) {
             this._hovered_data.object.material.color.set(
                 this._get_color(this._hovered_data.entity, 'normal'));
-            this._hovered_data.object.material.transparent = true;
         }
 
         // Did we pick a different object than the previously selected 3D object?
         if (this._selected_data && (!data || data.object !== this._selected_data.object)) {
             this._selected_data.object.material.color.set(
                 this._get_color(this._selected_data.entity, 'normal'));
-            this._selected_data.object.material.transparent = true;
             this._selected_data.manipulating = false;
         }
 
         if (data) {
             // User selected an entity.
             data.object.material.color.set(this._get_color(data.entity, 'selected'));
-            data.object.material.transparent = false;
             data.manipulating = true;
             this._hovered_data = data;
             this._selected_data = data;
@@ -298,7 +295,6 @@ export class Renderer {
                 if (!this._selected_data || old_data.object !== this._selected_data.object) {
                     old_data.object.material.color.set(
                         this._get_color(old_data.entity, 'normal'));
-                    old_data.object.material.transparent = true;
                 }
 
                 this._hovered_data = null;
@@ -308,7 +304,6 @@ export class Renderer {
                 if (!this._selected_data || data.object !== this._selected_data.object) {
                     data.object.material.color.set(
                         this._get_color(data.entity, 'hover'));
-                    data.object.material.transparent = true;
                 }
 
                 this._hovered_data = data;
