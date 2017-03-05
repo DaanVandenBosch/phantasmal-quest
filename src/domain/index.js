@@ -120,6 +120,8 @@ export class VisibleQuestEntity {
      */
     @observable position: Vec3;
 
+    @observable rotation: Vec3;
+
     /**
      * Section-relative position
      */
@@ -151,7 +153,8 @@ export class VisibleQuestEntity {
     constructor(
         area_id: number,
         section_id: number,
-        position: Vec3
+        position: Vec3,
+        rotation: Vec3
     ) {
         if (Object.getPrototypeOf(this) === Object.getPrototypeOf(VisibleQuestEntity))
             throw new Error('Abstract class should not be instantiated directly.');
@@ -160,10 +163,12 @@ export class VisibleQuestEntity {
         if (!Number.isInteger(section_id) || section_id < 0)
             throw new Error(`Expected section_id to be a non-negative integer, got ${section_id}.`);
         if (!position) throw new Error('position is required.');
+        if (!rotation) throw new Error('rotation is required.');
 
         this.area_id = area_id;
         this._section_id = section_id;
         this.position = position;
+        this.rotation = rotation;
     }
 
     //
@@ -184,10 +189,11 @@ export class QuestObject extends VisibleQuestEntity {
         area_id: number,
         section_id: number,
         position: Vec3,
+        rotation: Vec3,
         type: ObjectType,
         dat: any
     ) {
-        super(area_id, section_id, position);
+        super(area_id, section_id, position, rotation);
 
         if (!type) throw new Error('type is required.');
 
@@ -207,10 +213,11 @@ export class QuestNpc extends VisibleQuestEntity {
         area_id: number,
         section_id: number,
         position: Vec3,
+        rotation: Vec3,
         type: NpcType,
         dat: any
     ) {
-        super(area_id, section_id, position);
+        super(area_id, section_id, position, rotation);
 
         if (!type) throw new Error('type is required.');
 

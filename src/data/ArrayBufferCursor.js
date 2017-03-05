@@ -289,6 +289,22 @@ export class ArrayBufferCursor {
     }
 
     /**
+     * Writes an signed 32-bit integer and increments position by 4. If necessary, grows the cursor and reallocates the underlying buffer.
+     */
+    write_i32(value: number) {
+        this._ensure_capacity(this.position + 4);
+
+        this._dv.setInt32(this.position, value, this.little_endian);
+        this.position += 4;
+
+        if (this.position > this.size) {
+            this.size = this.position;
+        }
+
+        return this;
+    }
+
+    /**
      * Writes a 32-bit floating point number and increments position by 4. If necessary, grows the cursor and reallocates the underlying buffer.
      */
     write_f32(value: number) {

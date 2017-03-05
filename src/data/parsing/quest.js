@@ -169,10 +169,12 @@ function get_func_operations(operations: any[], func_offset: number) {
 function parse_obj_data(episode: number, objs: any[]): QuestObject[] {
     return objs.map(obj_data => {
         const {x, y, z} = obj_data.position;
+        const rot = obj_data.rotation;
         return new QuestObject(
             obj_data.area_id,
             obj_data.section_id,
             new Vec3(x, y, z),
+            new Vec3(rot.x, rot.y, rot.z),
             ObjectType.from_pso_id(obj_data.type_id),
             obj_data
         );
@@ -182,10 +184,12 @@ function parse_obj_data(episode: number, objs: any[]): QuestObject[] {
 function parse_npc_data(episode: number, npcs: any[]): QuestNpc[] {
     return npcs.map(npc_data => {
         const {x, y, z} = npc_data.position;
+        const rot = npc_data.rotation;
         return new QuestNpc(
             npc_data.area_id,
             npc_data.section_id,
             new Vec3(x, y, z),
+            new Vec3(rot.x, rot.y, rot.z),
             get_npc_type(episode, npc_data),
             npc_data
         );
@@ -349,6 +353,7 @@ function objects_to_dat_data(episode: number, objects: QuestObject[]): any[] {
         type_id: object.type.pso_id,
         section_id: object.section_id,
         position: object.section_position,
+        rotation: object.rotation,
         area_id: object.area_id,
         unknown: object.dat.unknown
     }));
@@ -367,6 +372,7 @@ function npcs_to_dat_data(episode: number, npcs: QuestNpc[]): any[] {
             type_id: type_data ? type_data.type_id : npc.dat.type_id,
             section_id: npc.section_id,
             position: npc.section_position,
+            rotation: npc.rotation,
             skin: type_data ? type_data.skin : npc.dat.skin,
             area_id: npc.area_id,
             unknown: npc.dat.unknown

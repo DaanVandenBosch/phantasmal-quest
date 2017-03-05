@@ -35,12 +35,17 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     const x = cursor.f32();
                     const y = cursor.f32();
                     const z = cursor.f32();
-                    const unknown3 = cursor.u8_array(40);
+                    const rotation_x = cursor.i32() / 0xFFFF * 2 * Math.PI;
+                    const rotation_y = cursor.i32() / 0xFFFF * 2 * Math.PI;
+                    const rotation_z = cursor.i32() / 0xFFFF * 2 * Math.PI;
+                    // The next 3 floats seem to be scale values.
+                    const unknown3 = cursor.u8_array(28);
 
                     objs.push({
                         type_id,
                         section_id,
                         position: { x, y, z },
+                        rotation: { x: rotation_x, y: rotation_y, z: rotation_z },
                         area_id,
                         unknown: [unknown1, unknown2, unknown3]
                     });
@@ -64,7 +69,10 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                     const x = cursor.f32();
                     const y = cursor.f32();
                     const z = cursor.f32();
-                    const unknown3 = cursor.u8_array(32);
+                    const rotation_x = cursor.i32() / 0xFFFF * 2 * Math.PI;
+                    const rotation_y = cursor.i32() / 0xFFFF * 2 * Math.PI;
+                    const rotation_z = cursor.i32() / 0xFFFF * 2 * Math.PI;
+                    const unknown3 = cursor.u8_array(20);
                     const skin = cursor.u32();
                     const unknown4 = cursor.u8_array(4);
 
@@ -72,6 +80,7 @@ export function parse_dat(cursor: ArrayBufferCursor) {
                         type_id,
                         section_id,
                         position: { x, y, z },
+                        rotation: { x: rotation_x, y: rotation_y, z: rotation_z },
                         skin,
                         area_id,
                         unknown: [unknown1, unknown2, unknown3, unknown4]
@@ -127,6 +136,9 @@ export function write_dat(
             cursor.write_f32(obj.position.x);
             cursor.write_f32(obj.position.y);
             cursor.write_f32(obj.position.z);
+            cursor.write_i32(Math.round(obj.rotation.x / (2 * Math.PI) * 0xFFFF));
+            cursor.write_i32(Math.round(obj.rotation.y / (2 * Math.PI) * 0xFFFF));
+            cursor.write_i32(Math.round(obj.rotation.z / (2 * Math.PI) * 0xFFFF));
             cursor.write_u8_array(obj.unknown[2]);
         }
     }
@@ -152,6 +164,9 @@ export function write_dat(
             cursor.write_f32(npc.position.x);
             cursor.write_f32(npc.position.y);
             cursor.write_f32(npc.position.z);
+            cursor.write_i32(Math.round(npc.rotation.x / (2 * Math.PI) * 0xFFFF));
+            cursor.write_i32(Math.round(npc.rotation.y / (2 * Math.PI) * 0xFFFF));
+            cursor.write_i32(Math.round(npc.rotation.z / (2 * Math.PI) * 0xFFFF));
             cursor.write_u8_array(npc.unknown[2]);
             cursor.write_u32(npc.skin);
             cursor.write_u8_array(npc.unknown[3]);

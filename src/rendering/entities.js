@@ -56,6 +56,8 @@ function create_mesh(
     autorun(() => {
         const {x, y, z} = entity.position;
         object_3d.position.set(x, y, z);
+        const rot = entity.rotation;
+        object_3d.rotation.set(rot.x, rot.y, rot.z);
     });
 
     entity.position = new Vec3(x, y, z);

@@ -145,9 +145,10 @@ function get_area_asset(
 }
 
 function npc_type_to_url(npc_type: NpcType): string {
+    // TODO: add more models.
     switch (npc_type) {
-        case NpcType.Hildebear: return '/data/167_bm_ene_bm2_moja/bm2c_s_moj_body.nj';
-        case NpcType.Hildeblue: return '/data/167_bm_ene_bm2_moja/bm2f_s_moj_body.nj';
+        case NpcType.Hildebear: return '/data/167_bm_ene_bm2_moja/bm2f_s_moj_body.nj';
+        case NpcType.Hildeblue: return '/data/167_bm_ene_bm2_moja/bm2w_s_moj_body.nj';
         case NpcType.RagRappy: return '/data/206_bm_ene_lappy/re3_b_lappy_base.nj';
         case NpcType.AlRappy: return '/data/206_bm_ene_lappy/re3_s_lappy_base.nj';
         case NpcType.Monest: return '/data/169_bm_ene_bm3_fly/bm3_s_nest.nj';
@@ -156,6 +157,29 @@ function npc_type_to_url(npc_type: NpcType): string {
         case NpcType.Booma: return '/data/239_bm_ene_re8_b_beast/re8_b_beast_wola_body.nj';
         case NpcType.Gobooma: return '/data/239_bm_ene_re8_b_beast/re8_b_srdbeast_wola_body.nj';
         case NpcType.Gigobooma: return '/data/239_bm_ene_re8_b_beast/re8_b_rdbeast_wola_body.nj';
+        case NpcType.Dragon: return '/data/147_bm_boss1_dragon/boss1_s_nb_dragon.nj';
+
+        // case NpcType.GrassAssassin: return '/data/.nj';
+        // case NpcType.PoisonLily: return '/data/.nj';
+        // case NpcType.NarLily: return '/data/.nj';
+        // case NpcType.NanoDragon: return '/data/230_bm_ene_nanodrago/bm6_s_drc_body.nj';
+        case NpcType.EvilShark: return '/data/165_bm_ene_bm1_shark/bm1_s_wala_body.nj';
+        case NpcType.PalShark: return '/data/165_bm_ene_bm1_shark/bm1f_s_wala_body.nj';
+        case NpcType.GuilShark: return '/data/165_bm_ene_bm1_shark/bm1tl_s_wala_body.nj';
+        // case NpcType.PofuillySlime: return '/data/.nj';
+        // case NpcType.PouillySlime: return '/data/.nj';
+        // case NpcType.PanArms: return '/data/.nj';
+        // case NpcType.DeRolLe: return '/data/.nj';
+
+        // case NpcType.Dubchic: return '/data/192_bm_ene_dubchik/me2_y_me2.nj';
+        // case NpcType.Gilchic: return '/data/192_bm_ene_dubchik/me2_y_me2_2.nj';
+        // case NpcType.Garanz: return '/data/.nj';
+        // case NpcType.SinowBeat: return '/data/.nj';
+        // case NpcType.SinowGold: return '/data/.nj';
+        // case NpcType.Canadine: return '/data/.nj';
+        // case NpcType.Canane: return '/data/.nj';
+        // case NpcType.Dubswitch: return '/data/.nj';
+        // case NpcType.VolOpt: return '/data/.nj';
 
         // case NpcType.SinowBerill: return '/data/.nj';
         // case NpcType.SinowSpigell: return '/data/.nj';
@@ -164,7 +188,7 @@ function npc_type_to_url(npc_type: NpcType): string {
         case NpcType.Mericarol: return '/data/175_bm_ene_bm9_s_mericarol/bm9_s_meri_body.nj';
         case NpcType.Mericus: return '/data/175_bm_ene_bm9_s_mericarol/bm9_s_meri_body.nj';
         case NpcType.Merikle: return '/data/175_bm_ene_bm9_s_mericarol/bm9_s_meri_body.nj';
-        case NpcType.UlGibbon: return '/data/171_bm_ene_bm5_gibon_u/gibon.nj';
+        case NpcType.UlGibbon: return '/data/171_bm_ene_bm5_gibon_u/gibonb_gibon.nj';
         case NpcType.ZolGibbon: return '/data/171_bm_ene_bm5_gibon_u/gibonb_gibon.nj';
         case NpcType.Gibbles: return '/data/197_bm_ene_gibbles/gibb_body.nj';
         // case NpcType.Gee: return '/data/.nj';

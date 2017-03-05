@@ -24,7 +24,7 @@ test('parse Towards the Future', () => {
 
 /**
  * Parse a QST file, write the resulting Quest object to QST again, then parse that again.
- * Then check whether the two Quest object are equal.
+ * Then check whether the two Quest objects are equal.
  */
 test('parse_quest and write_quest_qst', () => {
     const buffer = fs.readFileSync('test/resources/tethealla_v0.143_quests/solo/ep1/02.qst').buffer;
