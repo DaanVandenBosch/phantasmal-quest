@@ -1,5 +1,5 @@
 // @flow
-import { BufferGeometry, CylinderGeometry, Mesh, MeshLambertMaterial } from 'three';
+import { BufferGeometry, CylinderGeometry, DoubleSide, Mesh, MeshLambertMaterial } from 'three';
 import { autorun } from 'mobx';
 import { Vec3, VisibleQuestEntity, QuestNpc, QuestObject, Section } from '../domain';
 
@@ -46,7 +46,8 @@ function create_mesh(
     const object_3d = new Mesh(
         geometry || cylinder,
         new MeshLambertMaterial({
-            color
+            color,
+            side: DoubleSide
         })
     );
     object_3d.name = type;
