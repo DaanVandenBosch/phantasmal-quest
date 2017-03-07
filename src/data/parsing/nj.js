@@ -76,6 +76,9 @@ function parse_sibling_objects(
     indices: number[]
 ): void {
     const eval_flags = cursor.u32();
+    const no_translate = (eval_flags & 0b1) !== 0;
+    const no_rotate = (eval_flags & 0b10) !== 0;
+    const no_scale = (eval_flags & 0b100) !== 0;
     const hidden = (eval_flags & 0b1000) !== 0;
     const break_child_trace = (eval_flags & 0b10000) !== 0;
     const zxy_rotation_order = (eval_flags & 0b100000) !== 0;
@@ -96,9 +99,9 @@ function parse_sibling_objects(
     const rotation = new Euler(rotation_x, rotation_y, rotation_z, zxy_rotation_order ? 'ZXY' : 'ZYX');
     const matrix = new Matrix4()
         .compose(
-        new Vector3(pos_x, pos_y, pos_z),
-        new Quaternion().setFromEuler(rotation),
-        new Vector3(scale_x, scale_y, scale_z)
+        no_translate ? new Vector3() : new Vector3(pos_x, pos_y, pos_z),
+        no_rotate ? new Quaternion(0, 0, 0, 1) : new Quaternion().setFromEuler(rotation),
+        no_scale ? new Vector3(1, 1, 1) : new Vector3(scale_x, scale_y, scale_z)
         )
         .premultiply(parent_matrix);
 
@@ -162,16 +165,19 @@ function parse_model(
 
                     for (const vertex of chunk_vertices) {
                         const index = 3 * vertex.index;
-                        const position = new Vector3(...vertex.position).applyMatrix4(matrix);
-                        positions[index + 0] = position.x;
-                        positions[index + 1] = position.y;
-                        positions[index + 2] = position.z;
 
-                        if (vertex.normal) {
-                            const normal = new Vector3(...vertex.normal).applyMatrix3(normal_matrix);
-                            normals[index + 0] = normal.x;
-                            normals[index + 1] = normal.y;
-                            normals[index + 2] = normal.z;
+                        if (positions[index] === undefined) {
+                            const position = new Vector3(...vertex.position).applyMatrix4(matrix);
+                            positions[index + 0] = position.x;
+                            positions[index + 1] = position.y;
+                            positions[index + 2] = position.z;
+
+                            if (vertex.normal) {
+                                const normal = new Vector3(...vertex.normal).applyMatrix3(normal_matrix);
+                                normals[index + 0] = normal.x;
+                                normals[index + 1] = normal.y;
+                                normals[index + 2] = normal.z;
+                            }
                         }
                     }
                 }
@@ -214,7 +220,7 @@ function parse_chunks(cursor: ArrayBufferCursor, wide_end_chunks: boolean): *[] 
 
     while (loop) {
         const chunk_type_id = cursor.u8();
-        cursor.seek(1); // Flags
+        const flags = cursor.u8();
         const chunk_start_position = cursor.position;
         let chunk_type = 'UNKOWN';
         let data = null;
@@ -233,7 +239,12 @@ function parse_chunks(cursor: ArrayBufferCursor, wide_end_chunks: boolean): *[] 
         } else if (32 <= chunk_type_id && chunk_type_id <= 50) {
             chunk_type = 'VERTEX';
             size = 2 + 4 * cursor.u16();
-            data = parse_chunk_vertex(cursor, chunk_type_id);
+
+            if ((flags & 0b11) === 0) {
+                data = parse_chunk_vertex(cursor, chunk_type_id, flags);
+            } else {
+                data = [];
+            }
         } else if (56 <= chunk_type_id && chunk_type_id <= 58) {
             chunk_type = 'VOLUME';
             size = 2 + 2 * cursor.u16();

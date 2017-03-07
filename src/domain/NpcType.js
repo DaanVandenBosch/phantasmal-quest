@@ -1,3 +1,5 @@
+// @flow
+
 export class NpcType {
     id: number;
     code: string;
