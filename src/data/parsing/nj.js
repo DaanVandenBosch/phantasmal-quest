@@ -19,7 +19,6 @@ import { ArrayBufferCursor } from '../ArrayBufferCursor';
 // - bump maps
 // - animation
 // - deal with vertex information contained in triangle strips
-// - fix bugs that occur when parsing many of the bosses, bullclaws, gi gues, mothmans, gibons...
 export function parse_nj(cursor: ArrayBufferCursor): ?Object3D {
     while (cursor.bytes_left) {
         // NJ uses a little endian variant of the IFF format.
@@ -72,7 +71,7 @@ function parse_sibling_objects(
     parent_matrix: Matrix4,
     positions: number[],
     normals: number[],
-    reentry_offsets: number[],
+    cached_chunk_offsets: number[],
     vertices: *[]
 ): void {
     const eval_flags = cursor.u32();
@@ -87,9 +86,9 @@ function parse_sibling_objects(
     const pos_x = cursor.f32();
     const pos_y = cursor.f32();
     const pos_z = cursor.f32();
-    const rotation_x = cursor.i32() / 0xFFFF * 2 * Math.PI;
-    const rotation_y = cursor.i32() / 0xFFFF * 2 * Math.PI;
-    const rotation_z = cursor.i32() / 0xFFFF * 2 * Math.PI;
+    const rotation_x = cursor.i32() * (2 * Math.PI / 0xFFFF);
+    const rotation_y = cursor.i32() * (2 * Math.PI / 0xFFFF);
+    const rotation_z = cursor.i32() * (2 * Math.PI / 0xFFFF);
     const scale_x = cursor.f32();
     const scale_y = cursor.f32();
     const scale_z = cursor.f32();
@@ -107,17 +106,17 @@ function parse_sibling_objects(
 
     if (model_offset && !hidden) {
         cursor.seek_start(model_offset);
-        parse_model(cursor, matrix, positions, normals, reentry_offsets, vertices);
+        parse_model(cursor, matrix, positions, normals, cached_chunk_offsets, vertices);
     }
 
     if (child_offset && !break_child_trace) {
         cursor.seek_start(child_offset);
-        parse_sibling_objects(cursor, matrix, positions, normals, reentry_offsets, vertices);
+        parse_sibling_objects(cursor, matrix, positions, normals, cached_chunk_offsets, vertices);
     }
 
     if (sibling_offset) {
         cursor.seek_start(sibling_offset);
-        parse_sibling_objects(cursor, parent_matrix, positions, normals, reentry_offsets, vertices);
+        parse_sibling_objects(cursor, parent_matrix, positions, normals, cached_chunk_offsets, vertices);
     }
 }
 
@@ -136,70 +135,66 @@ function parse_model(
     matrix: Matrix4,
     positions: number[],
     normals: number[],
-    reentry_offsets: number[],
+    cached_chunk_offsets: number[],
     vertices: { position: Vector3, normal: Vector3 }[]
 ): void {
-    try {
-        const vlist_offset = cursor.u32(); // Vertex list
-        const plist_offset = cursor.u32(); // Triangle strip index list
+    const vlist_offset = cursor.u32(); // Vertex list
+    const plist_offset = cursor.u32(); // Triangle strip index list
 
-        const normal_matrix = new Matrix3().getNormalMatrix(matrix);
+    const normal_matrix = new Matrix3().getNormalMatrix(matrix);
 
-        if (vlist_offset) {
-            cursor.seek_start(vlist_offset);
+    if (vlist_offset) {
+        cursor.seek_start(vlist_offset);
 
-            for (const chunk of parse_chunks(cursor, reentry_offsets, true)) {
-                if (chunk.chunk_type === 'VERTEX') {
-                    const chunk_vertices: ChunkVertex[] = (chunk.data: any);
+        for (const chunk of parse_chunks(cursor, cached_chunk_offsets, true)) {
+            if (chunk.chunk_type === 'VERTEX') {
+                const chunk_vertices: ChunkVertex[] = (chunk.data: any);
 
-                    for (const vertex of chunk_vertices) {
-                        const position = new Vector3(...vertex.position).applyMatrix4(matrix);
-                        const normal = vertex.normal ? new Vector3(...vertex.normal).applyMatrix3(normal_matrix) : [0, 1, 0];
-                        vertices[vertex.index] = { position, normal };
-                    }
+                for (const vertex of chunk_vertices) {
+                    const position = new Vector3(...vertex.position).applyMatrix4(matrix);
+                    const normal = vertex.normal ? new Vector3(...vertex.normal).applyMatrix3(normal_matrix) : [0, 1, 0];
+                    vertices[vertex.index] = { position, normal };
                 }
             }
         }
+    }
 
-        if (plist_offset) {
-            cursor.seek_start(plist_offset);
+    if (plist_offset) {
+        cursor.seek_start(plist_offset);
 
-            for (const chunk of parse_chunks(cursor, reentry_offsets, false)) {
-                if (chunk.chunk_type === 'STRIP') {
-                    for (const {clockwise_winding, indices: strip_indices} of (chunk.data: any)) {
-                        for (let j = 2; j < strip_indices.length; ++j) {
-                            const a = vertices[strip_indices[j - 2]];
-                            const b = vertices[strip_indices[j - 1]];
-                            const c = vertices[strip_indices[j]];
+        for (const chunk of parse_chunks(cursor, cached_chunk_offsets, false)) {
+            if (chunk.chunk_type === 'STRIP') {
+                for (const {clockwise_winding, indices: strip_indices} of (chunk.data: any)) {
+                    for (let j = 2; j < strip_indices.length; ++j) {
+                        const a = vertices[strip_indices[j - 2]];
+                        const b = vertices[strip_indices[j - 1]];
+                        const c = vertices[strip_indices[j]];
 
-                            if (a && b && c) {
-                                if (j % 2 === (clockwise_winding ? 1 : 0)) {
-                                    positions.splice(positions.length, 0, a.position.x, a.position.y, a.position.z);
-                                    positions.splice(positions.length, 0, b.position.x, b.position.y, b.position.z);
-                                    positions.splice(positions.length, 0, c.position.x, c.position.y, c.position.z);
-                                    normals.splice(normals.length, 0, a.normal.x, a.normal.y, a.normal.z);
-                                    normals.splice(normals.length, 0, b.normal.x, b.normal.y, b.normal.z);
-                                    normals.splice(normals.length, 0, c.normal.x, c.normal.y, c.normal.z);
-                                } else {
-                                    positions.splice(positions.length, 0, b.position.x, b.position.y, b.position.z);
-                                    positions.splice(positions.length, 0, a.position.x, a.position.y, a.position.z);
-                                    positions.splice(positions.length, 0, c.position.x, c.position.y, c.position.z);
-                                    normals.splice(normals.length, 0, b.normal.x, b.normal.y, b.normal.z);
-                                    normals.splice(normals.length, 0, a.normal.x, a.normal.y, a.normal.z);
-                                    normals.splice(normals.length, 0, c.normal.x, c.normal.y, c.normal.z);
-                                }
+                        if (a && b && c) {
+                            if (j % 2 === (clockwise_winding ? 1 : 0)) {
+                                positions.splice(positions.length, 0, a.position.x, a.position.y, a.position.z);
+                                positions.splice(positions.length, 0, b.position.x, b.position.y, b.position.z);
+                                positions.splice(positions.length, 0, c.position.x, c.position.y, c.position.z);
+                                normals.splice(normals.length, 0, a.normal.x, a.normal.y, a.normal.z);
+                                normals.splice(normals.length, 0, b.normal.x, b.normal.y, b.normal.z);
+                                normals.splice(normals.length, 0, c.normal.x, c.normal.y, c.normal.z);
+                            } else {
+                                positions.splice(positions.length, 0, b.position.x, b.position.y, b.position.z);
+                                positions.splice(positions.length, 0, a.position.x, a.position.y, a.position.z);
+                                positions.splice(positions.length, 0, c.position.x, c.position.y, c.position.z);
+                                normals.splice(normals.length, 0, b.normal.x, b.normal.y, b.normal.z);
+                                normals.splice(normals.length, 0, a.normal.x, a.normal.y, a.normal.z);
+                                normals.splice(normals.length, 0, c.normal.x, c.normal.y, c.normal.z);
                             }
                         }
                     }
                 }
             }
         }
-    } catch (e) {
-        console.error(e);
     }
 }
 
-function parse_chunks(cursor: ArrayBufferCursor, reentry_offsets: number[], wide_end_chunks: boolean): *[] {
+function parse_chunks(cursor: ArrayBufferCursor, cached_chunk_offsets: number[], wide_end_chunks: boolean): *[] {
     const chunks = [];
     let loop = true;
 
@@ -218,20 +213,20 @@ function parse_chunks(cursor: ArrayBufferCursor, reentry_offsets: number[], wide
             chunk_type = 'BITS';
 
             if (chunk_type_id === 4) {
-                chunk_sub_type = 'STORE_REENTRY_OFFSET';
+                chunk_sub_type = 'CACHE_POLYGON_LIST';
                 data = {
                     store_index: flags,
                     offset: cursor.position
                 };
-                reentry_offsets[data.store_index] = data.offset;
+                cached_chunk_offsets[data.store_index] = data.offset;
                 loop = false;
             } else if (chunk_type_id === 5) {
-                chunk_sub_type = 'GO_TO_REENTRY_OFFSET';
+                chunk_sub_type = 'DRAW_POLYGON_LIST';
                 data = {
                     store_index: flags
                 };
-                cursor.seek_start(reentry_offsets[data.store_index]);
-                chunks.splice(chunks.length, 0, ...parse_chunks(cursor, reentry_offsets, wide_end_chunks));
+                cursor.seek_start(cached_chunk_offsets[data.store_index]);
+                chunks.splice(chunks.length, 0, ...parse_chunks(cursor, cached_chunk_offsets, wide_end_chunks));
             }
         } else if (8 <= chunk_type_id && chunk_type_id <= 9) {
             chunk_type = 'TINY';
@@ -242,12 +237,7 @@ function parse_chunks(cursor: ArrayBufferCursor, reentry_offsets: number[], wide
         } else if (32 <= chunk_type_id && chunk_type_id <= 50) {
             chunk_type = 'VERTEX';
             size = 2 + 4 * cursor.u16();
-
-            if ((flags & 0b11) === 0) {
-                data = parse_chunk_vertex(cursor, chunk_type_id, flags);
-            } else {
-                data = [];
-            }
+            data = parse_chunk_vertex(cursor, chunk_type_id, flags);
         } else if (56 <= chunk_type_id && chunk_type_id <= 58) {
             chunk_type = 'VOLUME';
             size = 2 + 2 * cursor.u16();
@@ -278,7 +268,12 @@ function parse_chunks(cursor: ArrayBufferCursor, reentry_offsets: number[], wide
     return chunks;
 }
 
-function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number): ChunkVertex[] {
+function parse_chunk_vertex(cursor: ArrayBufferCursor, chunk_type_id: number, flags: number): ChunkVertex[] {
+    // There are apparently 4 different sets of vertices, ignore all but set 0.
+    if ((flags & 0b11) !== 0) {
+        return [];
+    }
+
     const index = cursor.u16();
     const vertex_count = cursor.u16();
 

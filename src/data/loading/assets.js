@@ -1,5 +1,5 @@
 // @flow
-import { NpcType } from '../../domain';
+import { NpcType, ObjectType } from '../../domain';
 
 export function get_area_render_data(
     episode: number,
@@ -17,9 +17,19 @@ export function get_area_collision_data(
     return get_area_asset(episode, area_id, area_version, 'collision');
 }
 
-export function get_npc_data(npc_type: NpcType): Promise<ArrayBuffer> {
+export function get_npc_data(npc_type: NpcType): Promise<{ url: string, data: ArrayBuffer }> {
     try {
-        return get_asset(npc_type_to_url(npc_type));
+        const url = npc_type_to_url(npc_type);
+        return get_asset(url).then(data => ({ url, data }));
+    } catch (e) {
+        return Promise.reject(e);
+    }
+}
+
+export function get_object_data(object_type: ObjectType): Promise<{ url: string, data: ArrayBuffer }> {
+    try {
+        const url = object_type_to_url(object_type);
+        return get_asset(url).then(data => ({ url, data }));
     } catch (e) {
         return Promise.reject(e);
     }
@@ -146,9 +156,8 @@ function get_area_asset(
 
 function npc_type_to_url(npc_type: NpcType): string {
     switch (npc_type) {
-        // TODO: remove this case when XJ model is added and XJ parsing works.
-        case NpcType.Dubswitch:
-            throw new Error(`NPC type ${npc_type.name} cannot be mapped to a geometry file.`);
+        // The dubswitch model in in XJ format.
+        case NpcType.Dubswitch: return `/npcs/${npc_type.code}.xj`;
 
         // Episode II VR Temple
 
@@ -177,5 +186,30 @@ function npc_type_to_url(npc_type: NpcType): string {
         case NpcType.ChaosSorcerer2: return npc_type_to_url(NpcType.ChaosSorcerer);
 
         default: return `/npcs/${npc_type.code}.nj`;
+    }
+}
+
+function object_type_to_url(object_type: ObjectType): string {
+    switch (object_type) {
+        case ObjectType.EasterEgg:
+        case ObjectType.ChristmasTree:
+        case ObjectType.ChristmasWreath:
+        case ObjectType.TwentyFirstCentury:
+        case ObjectType.Sonic:
+        case ObjectType.WelcomeBoard:
+        case ObjectType.FloatingJelifish:
+        case ObjectType.RuinsSeal:
+        case ObjectType.Dolphin:
+        case ObjectType.Cacti:
+        case ObjectType.BigBrownRock:
+        case ObjectType.PoisonPlant:
+        case ObjectType.BigBlackRocks:
+        case ObjectType.FallingRock:
+        case ObjectType.DesertFixedTypeBoxBreakableCrystals:
+        case ObjectType.BeeHive:
+            return `/objects/${object_type.pso_id}.nj`;
+
+        default:
+            return `/objects/${object_type.pso_id}.xj`;
     }
 }

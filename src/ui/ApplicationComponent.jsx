@@ -64,7 +64,7 @@ export class ApplicationComponent extends React.Component {
                         <label className="pt-file-upload">
                             <input
                                 type="file"
-                                accept=".qst, .nj"
+                                accept=".nj, .qst, .xj"
                                 onChange={this._on_file_change} />
                             <span className="pt-file-upload-input">
                                 <span style={this._file_upload_style}>

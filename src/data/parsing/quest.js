@@ -306,6 +306,8 @@ function get_npc_type(episode: number, {type_id, unknown, skin, area_id}): NpcTy
         case `${0x0C0}, 1`: return NpcType.Dragon;
         case `${0x0C0}, 2`: return NpcType.GalGryphon;
         case `${0x0C1}, 1`: return NpcType.DeRolLe;
+        // TODO:
+        // case `${0x0C2}, 1`: return NpcType.VolOptPart1;
         case `${0x0C5}, 1`: return NpcType.VolOpt;
         case `${0x0C8}, 1`: return NpcType.DarkFalz;
         case `${0x0CA}, 2`: return NpcType.OlgaFlow;
@@ -343,8 +345,11 @@ function get_npc_type(episode: number, {type_id, unknown, skin, area_id}): NpcTy
         case 0x01E: return NpcType.Scientist;
         case 0x01F: return NpcType.Nurse;
         case 0x020: return NpcType.Irene;
+        case 0x0F1: return NpcType.ItemShop;
+        case 0x0FE: return NpcType.Nurse2;
     }
 
+    console.log(`Unknown type ID: ${type_id} (0x${type_id.toString(16)}).`);
     return NpcType.Unknown;
 }
 
@@ -384,7 +389,7 @@ function npc_type_to_dat_data(
     type: NpcType
 ): { type_id: number, skin: number, regular: boolean } | null {
     switch (type) {
-        default: throw new Error(`Unexpected type ${type}.`);
+        default: throw new Error(`Unexpected type ${type.code}.`);
 
         case NpcType.Unknown: return null;
 
@@ -403,6 +408,8 @@ function npc_type_to_dat_data(
         case NpcType.Scientist: return { type_id: 0x01E, skin: 0, regular: true };
         case NpcType.Nurse: return { type_id: 0x01F, skin: 0, regular: true };
         case NpcType.Irene: return { type_id: 0x020, skin: 0, regular: true };
+        case NpcType.ItemShop: return { type_id: 0x0F1, skin: 0, regular: true };
+        case NpcType.Nurse2: return { type_id: 0x0FE, skin: 0, regular: true };
 
         case NpcType.Hildebear: return { type_id: 0x040, skin: 0, regular: true };
         case NpcType.Hildeblue: return { type_id: 0x040, skin: 1, regular: true };

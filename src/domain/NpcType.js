@@ -44,6 +44,8 @@ export class NpcType {
     static Scientist: NpcType;
     static Nurse: NpcType;
     static Irene: NpcType;
+    static ItemShop: NpcType;
+    static Nurse2: NpcType;
 
     //
     // Enemy NPCs
@@ -191,7 +193,15 @@ export class NpcType {
 (function () {
     let id = 1;
 
+    //
+    // Unknown NPCs
+    //
+
     NpcType.Unknown = new NpcType(id++, 'Unknown', 'Unknown', false);
+
+    //
+    // Friendly NPCs
+    //
 
     NpcType.FemaleFat = new NpcType(id++, 'FemaleFat', 'Female Fat', false);
     NpcType.FemaleMacho = new NpcType(id++, 'FemaleMacho', 'Female Macho', false);
@@ -208,6 +218,14 @@ export class NpcType {
     NpcType.Scientist = new NpcType(id++, 'Scientist', 'Scientist', false);
     NpcType.Nurse = new NpcType(id++, 'Nurse', 'Nurse', false);
     NpcType.Irene = new NpcType(id++, 'Irene', 'Irene', false);
+    NpcType.ItemShop = new NpcType(id++, 'ItemShop', 'Item Shop', false);
+    NpcType.Nurse2 = new NpcType(id++, 'Nurse2', 'Nurse (Episode II)', false);
+
+    //
+    // Enemy NPCs
+    //
+
+    // Episode I Forest
 
     NpcType.Hildebear = new NpcType(id++, 'Hildebear', 'Hildebear', true);
     NpcType.Hildeblue = new NpcType(id++, 'Hildeblue', 'Hildeblue', true);
@@ -221,6 +239,8 @@ export class NpcType {
     NpcType.Gigobooma = new NpcType(id++, 'Gigobooma', 'Gigobooma', true);
     NpcType.Dragon = new NpcType(id++, 'Dragon', 'Dragon', true);
 
+    // Episode I Caves
+
     NpcType.GrassAssassin = new NpcType(id++, 'GrassAssassin', 'Grass Assassin', true);
     NpcType.PoisonLily = new NpcType(id++, 'PoisonLily', 'Poison Lily', true);
     NpcType.NarLily = new NpcType(id++, 'NarLily', 'Nar Lily', true);
@@ -233,6 +253,8 @@ export class NpcType {
     NpcType.PanArms = new NpcType(id++, 'PanArms', 'Pan Arms', true);
     NpcType.DeRolLe = new NpcType(id++, 'DeRolLe', 'De Rol Le', true);
 
+    // Episode I Mines
+
     NpcType.Dubchic = new NpcType(id++, 'Dubchic', 'Dubchic', true);
     NpcType.Gilchic = new NpcType(id++, 'Gilchic', 'Gilchic', true);
     NpcType.Garanz = new NpcType(id++, 'Garanz', 'Garanz', true);
@@ -242,6 +264,8 @@ export class NpcType {
     NpcType.Canane = new NpcType(id++, 'Canane', 'Canane', true);
     NpcType.Dubswitch = new NpcType(id++, 'Dubswitch', 'Dubswitch', true);
     NpcType.VolOpt = new NpcType(id++, 'VolOpt', 'Vol Opt', true);
+
+    // Episode I Ruins
 
     NpcType.Delsaber = new NpcType(id++, 'Delsaber', 'Delsaber', true);
     NpcType.ChaosSorcerer = new NpcType(id++, 'ChaosSorcerer', 'Chaos Sorcerer', true);
@@ -254,6 +278,8 @@ export class NpcType {
     NpcType.Bulclaw = new NpcType(id++, 'Bulclaw', 'Bulclaw', true);
     NpcType.Claw = new NpcType(id++, 'Claw', 'Claw', true);
     NpcType.DarkFalz = new NpcType(id++, 'DarkFalz', 'Dark Falz', true);
+
+    // Episode II VR Temple
 
     NpcType.Hildebear2 = new NpcType(id++, 'Hildebear2', 'Hildebear (Ep. II)', true);
     NpcType.Hildeblue2 = new NpcType(id++, 'Hildeblue2', 'Hildeblue (Ep. II)', true);
@@ -269,6 +295,8 @@ export class NpcType {
     NpcType.DarkBelra2 = new NpcType(id++, 'DarkBelra2', 'Dark Belra (Ep. II)', true);
     NpcType.BarbaRay = new NpcType(id++, 'BarbaRay', 'Barba Ray', true);
 
+    // Episode II VR Spaceship
+
     NpcType.SavageWolf2 = new NpcType(id++, 'SavageWolf2', 'Savage Wolf (Ep. II)', true);
     NpcType.BarbarousWolf2 = new NpcType(id++, 'BarbarousWolf2', 'Barbarous Wolf (Ep. II)', true);
     NpcType.PanArms2 = new NpcType(id++, 'PanArms2', 'Pan Arms (Ep. II)', true);
@@ -279,6 +307,8 @@ export class NpcType {
     NpcType.Delsaber2 = new NpcType(id++, 'Delsaber2', 'Delsaber (Ep. II)', true);
     NpcType.ChaosSorcerer2 = new NpcType(id++, 'ChaosSorcerer2', 'Chaos Sorcerer (Ep. II)', true);
     NpcType.GolDragon = new NpcType(id++, 'GolDragon', 'Gol Dragon', true);
+
+    // Episode II Central Control Area
 
     NpcType.SinowBerill = new NpcType(id++, 'SinowBerill', 'Sinow Berill', true);
     NpcType.SinowSpigell = new NpcType(id++, 'SinowSpigell', 'Sinow Spigell', true);
@@ -294,6 +324,8 @@ export class NpcType {
     NpcType.GiGue = new NpcType(id++, 'GiGue', 'Gi Gue', true);
     NpcType.GalGryphon = new NpcType(id++, 'GalGryphon', 'Gal Gryphon', true);
 
+    // Episode II Seabed
+
     NpcType.Deldepth = new NpcType(id++, 'Deldepth', 'Deldepth', true);
     NpcType.Delbiter = new NpcType(id++, 'Delbiter', 'Delbiter', true);
     NpcType.Dolmolm = new NpcType(id++, 'Dolmolm', 'Dolmolm', true);
@@ -306,6 +338,8 @@ export class NpcType {
     NpcType.IllGill = new NpcType(id++, 'IllGill', 'Ill Gill', true);
     NpcType.DelLily = new NpcType(id++, 'DelLily', 'Del Lily', true);
     NpcType.OlgaFlow = new NpcType(id++, 'OlgaFlow', 'Olga Flow', true);
+
+    // Episode IV
 
     NpcType.SandRappy = new NpcType(id++, 'SandRappy', 'Sand Rappy', true);
     NpcType.DelRappy = new NpcType(id++, 'DelRappy', 'Del Rappy', true);

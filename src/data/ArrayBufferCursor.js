@@ -78,9 +78,11 @@ export class ArrayBufferCursor {
         if (typeof buffer_or_capacity === 'number') {
             this.buffer = new ArrayBuffer(buffer_or_capacity);
             this.size = 0;
-        } else {
+        } else if (buffer_or_capacity instanceof ArrayBuffer) {
             this.buffer = buffer_or_capacity;
             this.size = this.buffer.byteLength;
+        } else {
+            throw new Error('buffer_or_capacity should be an ArrayBuffer or a number.');
         }
 
         this.little_endian = !!little_endian;
@@ -190,6 +192,20 @@ export class ArrayBufferCursor {
     u8_array(n: number): number[] {
         const array = [];
         for (let i = 0; i < n; ++i) array.push(this._dv.getUint8(this.position++));
+        return array;
+    }
+
+    /**
+     * Reads n unsigned 16-bit integers and increments position by 2n.
+     */
+    u16_array(n: number): number[] {
+        const array = [];
+
+        for (let i = 0; i < n; ++i) {
+            array.push(this._dv.getUint16(this.position, this.little_endian));
+            this.position += 2;
+        }
+
         return array;
     }
 

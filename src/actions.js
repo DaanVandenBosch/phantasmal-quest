@@ -3,8 +3,9 @@ import { ArrayBufferCursor } from './data/ArrayBufferCursor';
 import { application_state } from './store';
 import { parse_quest, write_quest_qst } from './data/parsing/quest';
 import { parse_nj } from './data/parsing/nj';
+import { parse_xj } from './data/parsing/xj';
 import { get_area_sections } from './data/loading/areas';
-import { get_npc_geometry } from './data/loading/entities';
+import { get_npc_geometry, get_object_geometry } from './data/loading/entities';
 import { create_object_mesh, create_npc_mesh } from './rendering/entities';
 import { create_model_mesh } from './rendering/models';
 import { VisibleQuestEntity } from './domain';
@@ -22,6 +23,11 @@ export function load_file(file: File) {
             // Might want to do this in a MobX transaction.
             reset_model_and_quest_state();
             application_state.current_model = create_model_mesh(parse_nj(new ArrayBufferCursor(reader.result, true)));
+        } else if (file.name.endsWith('.xj')) {
+            // Reset application state, then set the current model.
+            // Might want to do this in a MobX transaction.
+            reset_model_and_quest_state();
+            application_state.current_model = create_model_mesh(parse_xj(new ArrayBufferCursor(reader.result, true)));
         } else {
             const quest = parse_quest(new ArrayBufferCursor(reader.result, true));
 
@@ -42,13 +48,17 @@ export function load_file(file: File) {
 
                         // Generate object geometry.
                         for (const object of quest.objects.filter(o => o.area_id === variant.area.id)) {
-                            object.object3d = create_object_mesh(object, sections);
+                            get_object_geometry(object.type)
+                                .catch(e => console.error(e))
+                                .then(geometry => {
+                                    object.object3d = create_object_mesh(object, sections, geometry);
+                                });
                         }
 
                         // Generate NPC geometry.
                         for (const npc of quest.npcs.filter(npc => npc.area_id === variant.area.id)) {
                             get_npc_geometry(npc.type)
-                                .catch(e => null)
+                                .catch(e => console.error(e))
                                 .then(geometry => {
                                     npc.object3d = create_npc_mesh(npc, sections, geometry);
                                 });

@@ -18,7 +18,7 @@ export function create_npc_mesh(npc: QuestNpc, sections: Section[], geometry: Bu
     return create_mesh(npc, sections, geometry, NPC_COLOR, 'NPC');
 }
 
-const cylinder = new CylinderGeometry(4, 4, 20).translate(0, 10, 0);
+const cylinder = new CylinderGeometry(3, 3, 20).translate(0, 10, 0);
 
 function create_mesh(
     entity: VisibleQuestEntity,
