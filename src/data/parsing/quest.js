@@ -349,6 +349,7 @@ function get_npc_type(episode: number, {type_id, unknown, skin, area_id}): NpcTy
         case 0x0FE: return NpcType.Nurse2;
     }
 
+    // TODO: remove log statement:
     console.log(`Unknown type ID: ${type_id} (0x${type_id.toString(16)}).`);
     return NpcType.Unknown;
 }

@@ -2,8 +2,7 @@
 import { ArrayBufferCursor } from './data/ArrayBufferCursor';
 import { application_state } from './store';
 import { parse_quest, write_quest_qst } from './data/parsing/quest';
-import { parse_nj } from './data/parsing/nj';
-import { parse_xj } from './data/parsing/xj';
+import { parse_nj, parse_xj } from './data/parsing/ninja';
 import { get_area_sections } from './data/loading/areas';
 import { get_npc_geometry, get_object_geometry } from './data/loading/entities';
 import { create_object_mesh, create_npc_mesh } from './rendering/entities';

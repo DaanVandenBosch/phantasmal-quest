@@ -207,9 +207,9 @@ function object_type_to_url(object_type: ObjectType): string {
         case ObjectType.FallingRock:
         case ObjectType.DesertFixedTypeBoxBreakableCrystals:
         case ObjectType.BeeHive:
-            return `/objects/${object_type.pso_id}.nj`;
+            return `/objects/${String(object_type.pso_id)}.nj`;
 
         default:
-            return `/objects/${object_type.pso_id}.xj`;
+            return `/objects/${String(object_type.pso_id)}.xj`;
     }
 }

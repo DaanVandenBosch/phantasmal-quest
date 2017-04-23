@@ -1,15 +1,6 @@
 // @flow
-import {
-    BufferAttribute,
-    BufferGeometry,
-    Euler,
-    Matrix3,
-    Matrix4,
-    Object3D,
-    Quaternion,
-    Vector3
-} from 'three';
-import { ArrayBufferCursor } from '../ArrayBufferCursor';
+import { Matrix3, Matrix4, Vector3 } from 'three';
+import { ArrayBufferCursor } from '../../ArrayBufferCursor';
 
 // TODO:
 // - deal with multiple NJCM chunks
@@ -19,23 +10,14 @@ import { ArrayBufferCursor } from '../ArrayBufferCursor';
 // - bump maps
 // - animation
 // - deal with vertex information contained in triangle strips
-export function parse_nj(cursor: ArrayBufferCursor): ?Object3D {
-    while (cursor.bytes_left) {
-        // NJ uses a little endian variant of the IFF format.
-        // IFF files contain chunks preceded by an 8-byte header.
-        // The header consists of 4 ASCII characters for the "Type ID" and a 32-bit integer specifying the chunk size.
-        const iff_type_id = cursor.string_ascii(4, false, false);
-        const iff_chunk_size = cursor.u32();
 
-        if (iff_type_id === 'NJCM') {
-            return parse_njcm(cursor.take(iff_chunk_size));
-        } else {
-            cursor.seek(iff_chunk_size);
-        }
-    }
-
-    return null;
-}
+export type NjContext = {
+    format: 'nj',
+    positions: number[],
+    normals: number[],
+    cached_chunk_offsets: number[],
+    vertices: { position: Vector3, normal: Vector3 }[]
+};
 
 type Node = {
     vertices: { position: Vector3, normal: Vector3 }[],
@@ -55,89 +37,9 @@ type ChunkTriangleStrip = {
     indices: number[]
 };
 
-function parse_njcm(cursor: ArrayBufferCursor): ?BufferGeometry {
-    if (cursor.bytes_left) {
-        const positions: number[] = [];
-        const normals: number[] = [];
-        parse_sibling_objects(cursor, new Matrix4(), positions, normals, [], []);
-        return create_buffer_geometry(positions, normals);
-    } else {
-        return null;
-    }
-}
+export function parse_nj_model(cursor: ArrayBufferCursor, matrix: Matrix4, context: NjContext): void {
+    const { positions, normals, cached_chunk_offsets, vertices } = context;
 
-function parse_sibling_objects(
-    cursor: ArrayBufferCursor,
-    parent_matrix: Matrix4,
-    positions: number[],
-    normals: number[],
-    cached_chunk_offsets: number[],
-    vertices: *[]
-): void {
-    const eval_flags = cursor.u32();
-    const no_translate = (eval_flags & 0b1) !== 0;
-    const no_rotate = (eval_flags & 0b10) !== 0;
-    const no_scale = (eval_flags & 0b100) !== 0;
-    const hidden = (eval_flags & 0b1000) !== 0;
-    const break_child_trace = (eval_flags & 0b10000) !== 0;
-    const zxy_rotation_order = (eval_flags & 0b100000) !== 0;
-
-    const model_offset = cursor.u32();
-    const pos_x = cursor.f32();
-    const pos_y = cursor.f32();
-    const pos_z = cursor.f32();
-    const rotation_x = cursor.i32() * (2 * Math.PI / 0xFFFF);
-    const rotation_y = cursor.i32() * (2 * Math.PI / 0xFFFF);
-    const rotation_z = cursor.i32() * (2 * Math.PI / 0xFFFF);
-    const scale_x = cursor.f32();
-    const scale_y = cursor.f32();
-    const scale_z = cursor.f32();
-    const child_offset = cursor.u32();
-    const sibling_offset = cursor.u32();
-
-    const rotation = new Euler(rotation_x, rotation_y, rotation_z, zxy_rotation_order ? 'ZXY' : 'ZYX');
-    const matrix = new Matrix4()
-        .compose(
-        no_translate ? new Vector3() : new Vector3(pos_x, pos_y, pos_z),
-        no_rotate ? new Quaternion(0, 0, 0, 1) : new Quaternion().setFromEuler(rotation),
-        no_scale ? new Vector3(1, 1, 1) : new Vector3(scale_x, scale_y, scale_z)
-        )
-        .premultiply(parent_matrix);
-
-    if (model_offset && !hidden) {
-        cursor.seek_start(model_offset);
-        parse_model(cursor, matrix, positions, normals, cached_chunk_offsets, vertices);
-    }
-
-    if (child_offset && !break_child_trace) {
-        cursor.seek_start(child_offset);
-        parse_sibling_objects(cursor, matrix, positions, normals, cached_chunk_offsets, vertices);
-    }
-
-    if (sibling_offset) {
-        cursor.seek_start(sibling_offset);
-        parse_sibling_objects(cursor, parent_matrix, positions, normals, cached_chunk_offsets, vertices);
-    }
-}
-
-function create_buffer_geometry(
-    positions: number[],
-    normals: number[]
-): BufferGeometry {
-    const geometry = new BufferGeometry();
-    geometry.addAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
-    geometry.addAttribute('normal', new BufferAttribute(new Float32Array(normals), 3));
-    return geometry;
-}
-
-function parse_model(
-    cursor: ArrayBufferCursor,
-    matrix: Matrix4,
-    positions: number[],
-    normals: number[],
-    cached_chunk_offsets: number[],
-    vertices: { position: Vector3, normal: Vector3 }[]
-): void {
     const vlist_offset = cursor.u32(); // Vertex list
     const plist_offset = cursor.u32(); // Triangle strip index list
 
@@ -164,7 +66,7 @@ function parse_model(
 
         for (const chunk of parse_chunks(cursor, cached_chunk_offsets, false)) {
             if (chunk.chunk_type === 'STRIP') {
-                for (const {clockwise_winding, indices: strip_indices} of (chunk.data: any)) {
+                for (const { clockwise_winding, indices: strip_indices } of (chunk.data: any)) {
                     for (let j = 2; j < strip_indices.length; ++j) {
                         const a = vertices[strip_indices[j - 2]];
                         const b = vertices[strip_indices[j - 1]];

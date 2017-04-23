@@ -2,13 +2,13 @@
 
 export class ObjectType {
     id: number;
-    pso_id: number | null;
+    pso_id: ?number;
     name: string;
 
-    constructor(id: number, pso_id: number | null, name: string) {
+    constructor(id: number, pso_id: ?number, name: string) {
         if (!Number.isInteger(id) || id < 1)
             throw new Error(`Expected id to be an integer greater than or equal to 1, got ${id}.`);
-        if (pso_id !== null && (!Number.isInteger(pso_id) || pso_id < 0))
+        if (pso_id != null && (!Number.isInteger(pso_id) || pso_id < 0))
             throw new Error(`Expected pso_id to be null or an integer greater than or equal to 0, got ${pso_id}.`);
         if (!name) throw new Error('name is required.');
 
@@ -869,4 +869,4 @@ export class ObjectType {
     ObjectType.Heat = new ObjectType(id++, 913, 'Heat');
     ObjectType.TopOfSaintMillionEgg = new ObjectType(id++, 960, 'Top of saint million egg');
     ObjectType.UnknownItem961 = new ObjectType(id++, 961, 'Unknown Item (961)');
-} ());
+}());

@@ -8,7 +8,6 @@ import {
     Mesh,
     MeshBasicMaterial,
     MeshLambertMaterial,
-    MultiMaterial,
     Object3D,
     TriangleStripDrawMode,
     Vector3
@@ -19,7 +18,7 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
     const dv = new DataView(array_buffer);
 
     const object = new Object3D();
-    const material = new MultiMaterial([
+    const materials = [
         // Wall
         new MeshBasicMaterial({
             color: 0x80C0D0,
@@ -41,8 +40,8 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
             color: 0x604080,
             side: DoubleSide
         })
-    ]);
-    const wireframe_material = new MultiMaterial([
+    ];
+    const wireframe_materials = [
         // Wall
         new MeshBasicMaterial({
             color: 0x90D0E0,
@@ -65,7 +64,7 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
             color: 0x705090,
             wireframe: true
         })
-    ]);
+    ];
 
     const main_block_offset = dv.getUint32(dv.byteLength - 16, true);
     const main_offset_table_offset = dv.getUint32(main_block_offset, true);
@@ -111,11 +110,11 @@ export function parse_c_rel(array_buffer: ArrayBuffer): Object3D {
             block_geometry.faces.push(new Face3(v1, v2, v3, n, null, color_index));
         }
 
-        const mesh = new Mesh(block_geometry, material);
+        const mesh = new Mesh(block_geometry, materials);
         mesh.renderOrder = 1;
         object.add(mesh);
 
-        const wireframe_mesh = new Mesh(block_geometry, wireframe_material);
+        const wireframe_mesh = new Mesh(block_geometry, wireframe_materials);
         wireframe_mesh.renderOrder = 2;
         object.add(wireframe_mesh);
     }
@@ -369,7 +368,6 @@ export function parse_n_rel(
     }
 
     return {
-        // $FlowFixMe
         sections: [...sections.values()].sort((a, b) => a.id - b.id),
         object_3d: object
     };
