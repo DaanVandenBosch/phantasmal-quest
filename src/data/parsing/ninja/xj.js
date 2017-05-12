@@ -106,56 +106,61 @@ function parse_triangle_strip_list(
 
         cursor.seek_start(index_list_offset);
         const strip_indices = cursor.u16_array(index_count);
-        let ccw = true;
+        let clockwise = true;
 
         for (let j = 2; j < strip_indices.length; ++j) {
             const a = index_offset + strip_indices[j - 2];
             const b = index_offset + strip_indices[j - 1];
             const c = index_offset + strip_indices[j];
-            // const pa = positions.slice(3 * a, 3 * a + 3);
-            // const pb = positions.slice(3 * b, 3 * b + 3);
-            // const pc = positions.slice(3 * c, 3 * c + 3);
-            // const na = normals.slice(3 * a, 3 * a + 3);
-            // const nb = normals.slice(3 * b, 3 * b + 3);
-            // const nc = normals.slice(3 * c, 3 * c + 3);
+            const pa = new Vector3(positions[3 * a], positions[3 * a + 1], positions[3 * a + 2]);
+            const pb = new Vector3(positions[3 * b], positions[3 * b + 1], positions[3 * b + 2]);
+            const pc = new Vector3(positions[3 * c], positions[3 * c + 1], positions[3 * c + 2]);
+            const na = new Vector3(normals[3 * a], normals[3 * a + 1], normals[3 * a + 2]);
+            const nb = new Vector3(normals[3 * a], normals[3 * a + 1], normals[3 * a + 2]);
+            const nc = new Vector3(normals[3 * a], normals[3 * a + 1], normals[3 * a + 2]);
 
-            // The following switch statement fixes most of model 180.xj (zanba).
+            // Calculate a surface normal and reverse the vertex winding if at least 2 of the vertex normals point in the opposite direction.
+            // This hack fixes the winding for most models.
+            const normal = pb.clone().sub(pa).cross(pc.clone().sub(pa));
+
+            if (clockwise) {
+                normal.negate();
+            }
+
+            if (((normal.dot(na) < 0) + (normal.dot(nb) < 0) + (normal.dot(nc) < 0)) >= 2) {
+                clockwise = !clockwise;
+            }
+
+            if (clockwise) {
+                indices.push(b);
+                indices.push(a);
+                indices.push(c);
+            } else {
+                indices.push(a);
+                indices.push(b);
+                indices.push(c);
+            }
+
+            clockwise = !clockwise;
+
+            // The following switch statement fixes model 180.xj (zanba).
             // switch (j) {
-            //     case 9:
-            //     case 53:
+            //     case 17:
+            //     case 52:
             //     case 70:
+            //     case 92:
+            //     case 97:
             //     case 126:
             //     case 140:
             //     case 148:
             //     case 187:
             //     case 200:
+            //         console.warn(`swapping winding at: ${j}, (${a}, ${b}, ${c})`);
+            //         break;
+            //     default:
             //         ccw = !ccw;
+            //         break;
             // }
-
-            // function veq(v1, v2) {
-            //     for (let i = 0; i < 3; ++i) {
-            //         if (v1[i] !== v2[i]) {
-            //             return false;
-            //         }
-            //     }
-
-            //     return true;
-            // }
-
-            // if (veq(pa, pb) && veq(na, nb)) {
-            //     ccw = !ccw;
-            //     console.log('swapping winding at '+j, pa, na)
-            // }
-
-            if (j % 2 === (ccw ? 0 : 1)) {
-                indices.push(a);
-                indices.push(b);
-                indices.push(c);
-            } else {
-                indices.push(b);
-                indices.push(a);
-                indices.push(c);
-            }
         }
     }
 }

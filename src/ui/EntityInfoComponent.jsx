@@ -13,13 +13,12 @@ const table_style = {
     borderCollapse: 'collapse'
 };
 
-export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEntity }) => {
+export const EntityInfoComponent = observer(function EntityInfoComponent({ entity }: { entity: VisibleQuestEntity }) {
     if (entity) {
         const section_id = entity.section ? entity.section.id : entity.section_id;
         const pos = entity.position;
         const sect_pos = entity.section_position;
         let name = null;
-        let type_specifics = null;
 
         if (entity instanceof QuestObject) {
             name = (
@@ -67,7 +66,6 @@ export const EntityInfoComponent = observer(({entity}: { entity: VisibleQuestEnt
                         <tr>
                             <td>Z: </td><td>{Math.round(sect_pos.z)}</td>
                         </tr>
-                        {type_specifics}
                     </tbody>
                 </table>
             </div>
