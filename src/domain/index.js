@@ -23,6 +23,13 @@ export class Vec3 {
         this.z += v.z;
         return this;
     }
+
+    clone(x:?number, y:?number, z:?number) {
+        return new Vec3(
+            typeof x === 'number' ? x : this.x,
+            typeof y === 'number' ? y : this.y,
+            typeof z === 'number' ? z : this.z);
+    }
 };
 
 export class Section {
@@ -126,7 +133,7 @@ export class VisibleQuestEntity {
      * Section-relative position
      */
     @computed get section_position(): Vec3 {
-        let {x, y, z} = this.position;
+        let { x, y, z } = this.position;
 
         if (this.section) {
             const rel_x = x - this.section.position.x;
@@ -142,6 +149,21 @@ export class VisibleQuestEntity {
         }
 
         return new Vec3(x, y, z);
+    }
+
+    set section_position(sect_pos: Vec3): Vec3 {
+        let { x: rel_x, y: rel_y, z: rel_z } = sect_pos;
+
+        if (this.section) {
+            const sin = -this.section.sin_y_axis_rotation;
+            const cos = this.section.cos_y_axis_rotation;
+            const rot_x = cos * rel_x - sin * rel_z;
+            const rot_z = sin * rel_x + cos * rel_z;
+            const x = rot_x + this.section.position.x;
+            const y = rel_y + this.section.position.y;
+            const z = rot_z + this.section.position.z;
+            this.position = new Vec3(x, y, z);
+        }
     }
 
     object3d: ?Object3D = null;
