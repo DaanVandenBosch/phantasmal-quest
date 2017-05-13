@@ -274,43 +274,65 @@ export class Renderer {
         const pointer_pos = this._pointer_pos_to_device_coords(e);
 
         if (this._selected_data && this._selected_data.manipulating) {
-            // User is dragging a selected entity.
-            const data = this._selected_data;
+            if (e.button === 0) {
+                // User is dragging a selected entity.
+                const data = this._selected_data;
 
-            if (e.shiftKey) {
-                // Vertical movement.
-                // We intersect with a plane that's oriented toward the camera and that's coplanar with the point where the entity was grabbed.
-                this._raycaster.setFromCamera(pointer_pos, this._camera);
-                const ray = this._raycaster.ray;
-                const negative_world_dir = this._camera.getWorldDirection().clone().negate();
-                const plane = new Plane().setFromNormalAndCoplanarPoint(
-                    new Vector3(negative_world_dir.x, 0, negative_world_dir.z).normalize(),
-                    data.object.position.sub(data.grab_offset));
-                const intersection_point = ray.intersectPlane(plane);
+                if (e.shiftKey) {
+                    // Vertical movement.
+                    // We intersect with a plane that's oriented toward the camera and that's coplanar with the point where the entity was grabbed.
+                    this._raycaster.setFromCamera(pointer_pos, this._camera);
+                    const ray = this._raycaster.ray;
+                    const negative_world_dir = this._camera.getWorldDirection().clone().negate();
+                    const plane = new Plane().setFromNormalAndCoplanarPoint(
+                        new Vector3(negative_world_dir.x, 0, negative_world_dir.z).normalize(),
+                        data.object.position.sub(data.grab_offset));
+                    const intersection_point = ray.intersectPlane(plane);
 
-                const y = intersection_point.y + data.grab_offset.y;
-                const y_delta = y - data.entity.position.y;
-                data.drag_y += y_delta;
-                data.drag_adjust.y -= y_delta;
-                data.entity.position = new Vec3(
-                    data.entity.position.x,
-                    y,
-                    data.entity.position.z
-                );
-            } else {
-                // Horizontal movement accross terrain.
-                // Cast ray adjusted for dragging entities.
-                const terrain = this._pick_terrain(pointer_pos, data);
+                    if (intersection_point) {
+                        const y = intersection_point.y + data.grab_offset.y;
+                        const y_delta = y - data.entity.position.y;
+                        data.drag_y += y_delta;
+                        data.drag_adjust.y -= y_delta;
+                        data.entity.position = new Vec3(
+                            data.entity.position.x,
+                            y,
+                            data.entity.position.z
+                        );
+                    }
+                } else {
+                    // Horizontal movement accross terrain.
+                    // Cast ray adjusted for dragging entities.
+                    const terrain = this._pick_terrain(pointer_pos, data);
 
-                if (terrain) {
-                    data.entity.position = new Vec3(
-                        terrain.point.x,
-                        terrain.point.y + data.drag_y,
-                        terrain.point.z
-                    );
+                    if (terrain) {
+                        data.entity.position = new Vec3(
+                            terrain.point.x,
+                            terrain.point.y + data.drag_y,
+                            terrain.point.z
+                        );
 
-                    if (terrain.section) {
-                        data.entity.section = terrain.section;
+                        if (terrain.section) {
+                            data.entity.section = terrain.section;
+                        }
+                    } else {
+                        // If the cursor is not over any terrain, we translate the entity accross the horizontal plane in which the entity's origin lies.
+                        this._raycaster.setFromCamera(pointer_pos, this._camera);
+                        const ray = this._raycaster.ray;
+                        // ray.origin.add(data.drag_adjust);
+                        const plane = new Plane(
+                            new Vector3(0, 1, 0),
+                            -data.entity.position.y + data.grab_offset.y);
+                        const intersection_point = ray.intersectPlane(plane);
+                        console.log(plane, intersection_point)
+
+                        if (intersection_point) {
+                            data.entity.position = new Vec3(
+                                intersection_point.x + data.grab_offset.x,
+                                data.entity.position.y,
+                                intersection_point.z + data.grab_offset.z
+                            );
+                        }
                     }
                 }
             }
