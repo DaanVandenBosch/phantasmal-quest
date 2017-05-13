@@ -6,6 +6,7 @@ import {
     MOUSE,
     Object3D,
     PerspectiveCamera,
+    Plane,
     Raycaster,
     Scene,
     Vector2,
@@ -275,18 +276,42 @@ export class Renderer {
         if (this._selected_data && this._selected_data.manipulating) {
             // User is dragging a selected entity.
             const data = this._selected_data;
-            // Cast ray adjusted for dragging entities.
-            const terrain = this._pick_terrain(pointer_pos, data);
 
-            if (terrain) {
+            if (e.shiftKey) {
+                // Vertical movement.
+                // We intersect with a plane that's oriented toward the camera and that's coplanar with the point where the entity was grabbed.
+                this._raycaster.setFromCamera(pointer_pos, this._camera);
+                const ray = this._raycaster.ray;
+                const negative_world_dir = this._camera.getWorldDirection().clone().negate();
+                const plane = new Plane().setFromNormalAndCoplanarPoint(
+                    new Vector3(negative_world_dir.x, 0, negative_world_dir.z).normalize(),
+                    data.object.position.sub(data.grab_offset));
+                const intersection_point = ray.intersectPlane(plane);
+
+                const y = intersection_point.y + data.grab_offset.y;
+                const y_delta = y - data.entity.position.y;
+                data.drag_y += y_delta;
+                data.drag_adjust.y -= y_delta;
                 data.entity.position = new Vec3(
-                    terrain.point.x,
-                    terrain.point.y + data.drag_y,
-                    terrain.point.z
+                    data.entity.position.x,
+                    y,
+                    data.entity.position.z
                 );
+            } else {
+                // Horizontal movement accross terrain.
+                // Cast ray adjusted for dragging entities.
+                const terrain = this._pick_terrain(pointer_pos, data);
 
-                if (terrain.section) {
-                    data.entity.section = terrain.section;
+                if (terrain) {
+                    data.entity.position = new Vec3(
+                        terrain.point.x,
+                        terrain.point.y + data.drag_y,
+                        terrain.point.z
+                    );
+
+                    if (terrain.section) {
+                        data.entity.section = terrain.section;
+                    }
                 }
             }
         } else {
@@ -315,7 +340,7 @@ export class Renderer {
     }
 
     _pointer_pos_to_device_coords(e: MouseEvent) {
-        const {width, height} = this._renderer.getSize();
+        const { width, height } = this._renderer.getSize();
         return new Vector2(
             e.offsetX / width * 2 - 1,
             e.offsetY / height * -2 + 1);
@@ -341,9 +366,13 @@ export class Renderer {
         const nearest_data = object_dist < npc_dist ? nearest_object : nearest_npc;
 
         nearest_data.entity = nearest_data.object.userData.entity;
-        nearest_data.drag_adjust = nearest_data.object.position
+        // Vector that points from the grabbing point to the model's origin.
+        nearest_data.grab_offset = nearest_data.object.position
             .clone()
             .sub(nearest_data.point);
+        // Vector that points from the grabbing point to the terrain point directly under the model's origin.
+        nearest_data.drag_adjust = nearest_data.grab_offset.clone();
+        // Distance to terrain.
         nearest_data.drag_y = 0;
 
         // Find vertical distance to terrain.
