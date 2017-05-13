@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {
     Color,
     HemisphereLight,
+    MOUSE,
     Object3D,
     PerspectiveCamera,
     Raycaster,
@@ -66,6 +67,8 @@ export class Renderer {
         this._camera = new PerspectiveCamera(75, 1, 0.1, 5000);
         this._controls = new OrbitControls(
             this._camera, this._renderer.domElement);
+        this._controls.mouseButtons.ORBIT = MOUSE.RIGHT;
+        this._controls.mouseButtons.PAN = MOUSE.LEFT;
 
         this._scene.background = new Color(0x151C21);
         this._scene.add(new HemisphereLight(0xffffff, 0x505050, 1));
