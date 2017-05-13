@@ -324,7 +324,6 @@ export class Renderer {
                             new Vector3(0, 1, 0),
                             -data.entity.position.y + data.grab_offset.y);
                         const intersection_point = ray.intersectPlane(plane);
-                        console.log(plane, intersection_point)
 
                         if (intersection_point) {
                             data.entity.position = new Vec3(
