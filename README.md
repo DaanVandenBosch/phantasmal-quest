@@ -1,3 +1,5 @@
+**This project has moved to https://github.com/DaanVandenBosch/phantasmal-world!**
+
 # Phantasmal Quest Editor
 
 Phantasmal Quest Editor is an editor for Phantasy Star Online quests. This project is in a very early stage of development.
